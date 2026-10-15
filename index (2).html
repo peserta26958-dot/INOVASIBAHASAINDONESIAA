@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMS & Turnamen Asesmen Interaktif - Bahasa Indonesia XI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(135deg, #e0e7ff 0%, #fce7f3 38%, #fef3c7 72%, #d1fae5 100%);
+      background-attachment: fixed;
+    }
+    .sticky-note {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 3px 4px 10px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    .sticky-note::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      border-width: 15px 15px 0 0;
+      border-style: solid;
+      border-color: rgba(0,0,0,0.05) white transparent transparent;
+      box-shadow: -2px -2px 2px rgba(0,0,0,0.05);
+      border-bottom-right-radius: 8px;
+    }
+    .sticky-note:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 6px 8px 15px rgba(0,0,0,0.12);
+      z-index: 10;
+    }
+    .sticky-selected {
+      transform: scale(1.05) rotate(0deg) !important;
+      box-shadow: 0 0 0 4px #4f46e5, 8px 10px 20px rgba(79, 70, 229, 0.3) !important;
+      z-index: 20;
+    }
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* ===== LATAR BELAKANG ANIMASI ===== */
+    #bg-art { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    #bg-art .dots {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(79,70,229,.16) 1.6px, transparent 1.6px);
+      background-size: 30px 30px;
+      -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.25));
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.25));
+    }
+    #bg-art .blob { position: absolute; border-radius: 50%; will-change: transform; animation: drift 24s ease-in-out infinite alternate; }
+    #bg-art .b1 { width: 560px; height: 560px; left: -140px; top: -120px; background: radial-gradient(circle at 35% 35%, rgba(99,102,241,.55), transparent 68%); }
+    #bg-art .b2 { width: 520px; height: 520px; right: -150px; top: 18%; background: radial-gradient(circle at 40% 40%, rgba(236,72,153,.42), transparent 68%); animation-duration: 30s; animation-delay: -8s; }
+    #bg-art .b3 { width: 600px; height: 600px; left: 22%; bottom: -260px; background: radial-gradient(circle at 40% 40%, rgba(251,191,36,.55), transparent 68%); animation-duration: 27s; animation-delay: -14s; }
+    #bg-art .b4 { width: 420px; height: 420px; right: 12%; bottom: -120px; background: radial-gradient(circle at 40% 40%, rgba(16,185,129,.38), transparent 68%); animation-duration: 33s; animation-delay: -5s; }
+    @keyframes drift {
+      from { transform: translate3d(0,0,0) scale(1); }
+      to   { transform: translate3d(60px,-50px,0) scale(1.18); }
+    }
+    #bg-art .ico { position: absolute; top: 100%; opacity: .2; animation: floatUp linear infinite; will-change: transform; }
+    @keyframes floatUp {
+      from { transform: translate3d(0,0,0) rotate(0deg); }
+      to   { transform: translate3d(30px,-125vh,0) rotate(360deg); }
+    }
+    main { position: relative; z-index: 10; }
+    @media (prefers-reduced-motion: reduce) {
+      #bg-art .blob, #bg-art .ico { animation: none; }
+    }
+    #sound-btn { transition: transform .2s, box-shadow .2s; }
+    #sound-btn:hover { transform: scale(1.1); }
+    #sound-btn.on::after { content:''; position:absolute; inset:-5px; border-radius:9999px; border:2px solid rgba(251,191,36,.7); animation: ring 1.8s ease-out infinite; }
+    @keyframes ring { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; rounded: 10px; }
+    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col selection:bg-indigo-200 selection:text-indigo-900">
+
+  <!-- Latar belakang animasi -->
+  <div id="bg-art" aria-hidden="true">
+    <div class="dots"></div>
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+    <i class="fa-solid fa-book ico" style="left:4%;color:#6366f1;font-size:30px;animation-duration:19s;animation-delay:-2s"></i>
+    <i class="fa-solid fa-pencil ico" style="left:12%;color:#ec4899;font-size:26px;animation-duration:23s;animation-delay:-9s"></i>
+    <i class="fa-solid fa-star ico" style="left:20%;color:#f59e0b;font-size:24px;animation-duration:17s;animation-delay:-5s"></i>
+    <i class="fa-solid fa-graduation-cap ico" style="left:29%;color:#8b5cf6;font-size:34px;animation-duration:26s;animation-delay:-14s"></i>
+    <i class="fa-solid fa-feather-pointed ico" style="left:38%;color:#10b981;font-size:28px;animation-duration:21s;animation-delay:-7s"></i>
+    <i class="fa-solid fa-lightbulb ico" style="left:47%;color:#f59e0b;font-size:28px;animation-duration:18s;animation-delay:-11s"></i>
+    <i class="fa-solid fa-masks-theater ico" style="left:55%;color:#ec4899;font-size:30px;animation-duration:25s;animation-delay:-3s"></i>
+    <i class="fa-solid fa-newspaper ico" style="left:63%;color:#0ea5e9;font-size:28px;animation-duration:22s;animation-delay:-16s"></i>
+    <i class="fa-solid fa-quote-left ico" style="left:71%;color:#6366f1;font-size:24px;animation-duration:20s;animation-delay:-8s"></i>
+    <i class="fa-solid fa-trophy ico" style="left:79%;color:#f59e0b;font-size:30px;animation-duration:24s;animation-delay:-12s"></i>
+    <i class="fa-solid fa-pen-nib ico" style="left:87%;color:#8b5cf6;font-size:26px;animation-duration:19s;animation-delay:-6s"></i>
+    <i class="fa-solid fa-comments ico" style="left:94%;color:#10b981;font-size:28px;animation-duration:27s;animation-delay:-18s"></i>
+  </div>
+
+  <!-- Tombol musik -->
+  <button id="sound-btn" onclick="Sound.toggle()" title="Musik latar: nyala / mati" aria-label="Musik latar" class="fixed bottom-4 right-4 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white text-lg shadow-xl shadow-orange-500/40 flex items-center justify-center">
+    <i id="sound-icon" class="fa-solid fa-volume-xmark"></i>
+  </button>
+
+  <!-- Pesan Pembuka -->
+  <div id="welcome-overlay" onclick="closeWelcomeMessage()" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-900/95 backdrop-blur-md transition-opacity duration-500 cursor-pointer text-white px-4">
+    <div class="text-center transform transition-transform duration-500 hover:scale-105">
+      <h1 class="text-4xl sm:text-6xl font-black mb-4 tracking-tight drop-shadow-lg">Selamat datang di kelas<br/><span class="text-amber-400">Bahasa Indonesia</span></h1>
+      <p class="text-xl sm:text-3xl font-medium text-indigo-200 mt-2">oleh : Kurnia Sari, S.Pd.</p>
+      <div class="mt-12 text-sm text-indigo-400 animate-pulse font-bold tracking-widest uppercase">
+        <i class="fa-solid fa-hand-pointer mr-2"></i> Klik layar untuk memulai
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 text-white sticky top-0 z-50 shadow-lg border-b border-indigo-500/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-center sm:justify-start">
+        <div class="bg-gradient-to-br from-amber-300 to-amber-500 text-indigo-950 p-2.5 rounded-xl font-bold text-xl shadow-md transform hover:scale-105 transition-transform">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div class="text-center sm:text-left">
+          <h1 class="font-extrabold text-base sm:text-xl leading-tight tracking-tight">Turnamen Asesmen Interaktif</h1>
+          <p class="text-[10px] sm:text-xs text-amber-300 font-bold tracking-wider uppercase mt-0.5">Khusus Bahasa Indonesia - Kelas XI</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2 bg-indigo-950/50 backdrop-blur-sm p-1.5 rounded-2xl text-xs sm:text-sm border border-white/10 w-full sm:w-auto justify-center">
+        <button id="btn-tab-modul" onclick="switchTab('modul')" class="px-4 py-2 rounded-xl font-bold transition-all bg-white text-indigo-900 shadow-md">
+          <i class="fa-solid fa-book-open mr-1.5"></i>Panduan
+        </button>
+        <button id="btn-tab-game" onclick="switchTab('game')" class="px-4 py-2 rounded-xl font-bold transition-all text-indigo-200 hover:text-white hover:bg-white/10">
+          <i class="fa-solid fa-gamepad mr-1.5"></i>Ruang Turnamen
+        </button>
+        <button id="btn-tab-lms" onclick="switchTab('lms')" class="px-4 py-2 rounded-xl font-bold transition-all text-amber-300 hover:text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30">
+          <i class="fa-solid fa-user-lock mr-1.5 text-amber-400"></i>LMS Guru
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- TAB 1: MODUL & PANDUAN TURNAMEN -->
+    <section id="tab-modul" class="space-y-8 fade-in">
+      <div class="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden group">
+        <div class="absolute -top-10 -right-10 p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-700 transform group-hover:rotate-12 group-hover:scale-110">
+          <i class="fa-solid fa-graduation-cap text-9xl"></i>
+        </div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+        
+        <span class="bg-amber-400 text-indigo-950 text-xs font-black uppercase px-4 py-1.5 rounded-full relative z-10 shadow-sm tracking-wide">Materi Bahasa Indonesia Kelas XI</span>
+        <h2 class="text-3xl sm:text-4xl font-black mt-4 relative z-10 tracking-tight leading-tight">Panduan Turnamen<br/>Asesmen Papan Sticky Note</h2>
+        <p class="mt-4 text-indigo-100 max-w-2xl leading-relaxed text-sm sm:text-base relative z-10 font-medium">
+          Setiap Petualang akan diberikan sebuah pertanyaan. Mereka harus memilih <strong>salah satu dari 6 Sticky Note</strong> yang tersedia sebagai jawaban, lalu menuliskan alasan analitisnya. Ingat, penilaian didasarkan pada logika dan relevansi argumen!
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl p-7 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          <div>
+            <div class="w-14 h-14 bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 rounded-2xl flex items-center justify-center text-2xl font-black mb-5">1</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Pilih Materi Topik</h3>
+            <p class="text-sm text-slate-500 mb-4 leading-relaxed">Tersedia 6 Bab Materi Kelas XI. Siswa wajib memilih materi sesuai instruksi guru:</p>
+            <ul class="space-y-2">
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><i class="fa-solid fa-scale-balanced text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 1</span><span class="text-sm font-extrabold text-slate-800">Teks Argumentasi</span></span>
+              </li>
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center"><i class="fa-solid fa-newspaper text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 2</span><span class="text-sm font-extrabold text-slate-800">Teks Berita</span></span>
+              </li>
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><i class="fa-solid fa-book-open-reader text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 3</span><span class="text-sm font-extrabold text-slate-800">Cerpen</span></span>
+              </li>
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-fuchsia-100 text-fuchsia-700 flex items-center justify-center"><i class="fa-solid fa-feather-pointed text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 4</span><span class="text-sm font-extrabold text-slate-800">Puisi</span></span>
+              </li>
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-masks-theater text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 5</span><span class="text-sm font-extrabold text-slate-800">Drama</span></span>
+              </li>
+              <li class="flex items-center gap-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-xl px-3 py-2.5 transition-colors">
+                <span class="w-8 h-8 shrink-0 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-flask text-sm"></i></span>
+                <span><span class="block text-[10px] text-slate-400 font-black uppercase tracking-widest">Bab 6</span><span class="text-sm font-extrabold text-slate-800">Karya Ilmiah</span></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-7 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          <div>
+            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 rounded-2xl flex items-center justify-center text-2xl font-black mb-5">2</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Penilaian Cerdas (Logika)</h3>
+            <p class="text-sm text-slate-500 mb-4 leading-relaxed">Sistem menilai berdasarkan relevansi dan struktur logis, bukan dari panjang/pendek kalimat:</p>
+            <ul class="space-y-3 text-xs text-slate-700 font-semibold">
+              <li class="flex items-start"><i class="fa-solid fa-star text-emerald-500 mt-0.5 mr-2"></i><span><strong>Mendalam:</strong> Argumen mengandung kata kunci penalaran (sebab, karena, fakta, bukti) yang relevan.</span></li>
+              <li class="flex items-start"><i class="fa-solid fa-star-half-stroke text-blue-500 mt-0.5 mr-2"></i><span><strong>Sedang:</strong> Jawaban benar, namun kurang menggunakan kerangka argumen yang logis.</span></li>
+              <li class="flex items-start"><i class="fa-solid fa-ban text-red-500 mt-0.5 mr-2"></i><span><strong>Spam (0 Poin):</strong> Ketikan asal (tanpa makna) otomatis dideteksi AI.</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-7 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+          <div>
+            <div class="w-14 h-14 bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300 rounded-2xl flex items-center justify-center text-2xl font-black mb-5">3</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Refleksi & Kustomisasi</h3>
+            <p class="text-sm text-slate-500 mb-4 leading-relaxed">Guru memegang kendali penuh pada sistem ini:</p>
+            <ul class="space-y-3 text-xs text-slate-700 font-semibold">
+              <li class="flex items-start"><i class="fa-solid fa-lightbulb text-amber-500 mt-0.5 mr-2"></i><span><strong>Refleksi Otomatis:</strong> Penjelasan kunci jawaban muncul di akhir bagi siswa.</span></li>
+              <li class="flex items-start"><i class="fa-solid fa-pen-to-square text-indigo-500 mt-0.5 mr-2"></i><span><strong>Editor 6 Sticky Note:</strong> Guru bisa menyesuaikan pertanyaan dan teks pilihan pada keenam sticky note di LMS.</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARA BERMAIN -->
+      <div class="bg-white/90 backdrop-blur rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-2xl shadow-lg"><i class="fa-solid fa-gamepad"></i></div>
+          <div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">Cara Bermain</h3>
+            <p class="text-sm text-slate-500 font-medium">Ikuti 7 langkah ini dari atas ke bawah.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mt-8">
+          <ol class="lg:col-span-3 relative space-y-6">
+            <div class="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-indigo-300 via-fuchsia-300 to-amber-300 -translate-x-1/2"></div>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-door-open"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 1</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Masuk ke Ruang Turnamen</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Ketuk tab <strong>Ruang Turnamen</strong> di bagian atas layar.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-book-bookmark"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 2</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Pilih Bab</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Ketuk kartu bab (Bab 1 sampai Bab 6) sesuai perintah gurumu.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-key"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 3</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Masukkan Kode Akses</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Ketik kode turnamen yang diberikan guru, lalu ketuk <strong>Buka Gerbang Arena</strong>.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-people-group"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 4</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Isi Identitas Kelompok</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Tulis <strong>nama kelompok</strong> dan <strong>kelas</strong>. Siapkan 6 anggota, karena satu HP dipakai bergiliran.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-note-sticky"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 5</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Giliran Petualang: Jawab Soal</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Baca pertanyaan, pilih <strong>satu dari 6 Sticky Note</strong>, tulis <strong>alasanmu</strong> (wajib), lalu ketuk <strong>Kunci Jawaban</strong>. Waktu menjawab <strong>5 menit</strong> per petualang.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-repeat"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 6</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Oper HP ke Teman Berikutnya</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Setelah muncul layar <em>Jawaban Tersimpan</em>, serahkan HP ke temanmu. Ulangi sampai <strong>Petualang 6</strong> selesai.</p>
+              </div>
+            </li>
+            <li class="relative flex gap-4">
+              <div class="relative z-10 shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-trophy"></i></div>
+              <div class="pb-1 pt-0.5">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langkah 7</div>
+                <h4 class="font-extrabold text-slate-900 text-base leading-snug">Lihat Hasil &amp; Refleksi</h4>
+                <p class="text-sm text-slate-600 mt-1 leading-relaxed">Skor, waktu, dan penjelasan jawaban muncul di akhir, dan hasilnya <strong>otomatis terkirim ke LMS Guru</strong>.</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="lg:col-span-2 space-y-5">
+            <div class="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5">
+              <h4 class="font-black text-indigo-900 text-sm uppercase tracking-wider mb-2"><i class="fa-solid fa-coins text-amber-500 mr-1.5"></i>Sistem Poin</h4>
+              <ul>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-circle-check text-emerald-500 w-4 text-center"></i>Memilih Sticky Note yang benar</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">50</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-star text-emerald-500 w-4 text-center"></i>Alasan mendalam (banyak kata penalaran)</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">+50</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-star-half-stroke text-blue-500 w-4 text-center"></i>Alasan sedang</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">+30</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-star-half text-amber-500 w-4 text-center"></i>Alasan dasar (tanpa kata penalaran)</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">+10</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-lightbulb text-slate-500 w-4 text-center"></i>Pilihan salah, tetapi alasan logis</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">15</span>
+              </li>
+              <li class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+                <span class="flex items-center gap-2.5 text-xs font-semibold text-slate-700"><i class="fa-solid fa-ban text-red-500 w-4 text-center"></i>Alasan asal-asalan (spam)</span>
+                <span class="shrink-0 font-black text-indigo-700 text-sm">0</span>
+              </li>
+              </ul>
+              <p class="mt-3 text-[11px] font-bold text-indigo-900/80 bg-indigo-100/60 rounded-xl px-3 py-2">Maksimal 100 poin per petualang, jadi total tertinggi satu kelompok adalah <strong>600 poin</strong>.</p>
+            </div>
+
+            <div class="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5">
+              <h4 class="font-black text-amber-900 text-sm uppercase tracking-wider mb-2"><i class="fa-solid fa-circle-info text-amber-500 mr-1.5"></i>Aturan Penting</h4>
+              <ul class="space-y-2.5 text-xs text-slate-700 font-semibold">
+                <li class="flex items-start gap-2"><i class="fa-solid fa-hourglass-half text-amber-500 mt-0.5"></i><span>Waktu habis? Jawabanmu <strong>tersimpan otomatis</strong> dan giliran berpindah.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-pen text-indigo-500 mt-0.5"></i><span>Alasan <strong>wajib ditulis</strong>. Tulis dengan kalimat yang bermakna dan pakai kata penalaran seperti <em>karena, sebab, fakta, bukti</em>.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-ranking-star text-emerald-500 mt-0.5"></i><span>Peringkat dilihat dari <strong>skor tertinggi</strong>. Jika sama, yang <strong>waktunya tercepat</strong> menang.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-rotate text-sky-500 mt-0.5"></i><span>Jika kelompok yang sama mengulang di bab yang sama, <strong>hasil terbaru menggantikan</strong> hasil lama.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-200 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex items-center space-x-5">
+          <div class="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl text-2xl font-bold flex items-center justify-center shadow-lg">
+            <i class="fa-solid fa-play ml-1"></i>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-xl text-slate-900 tracking-tight">Siap Bertanding di Arena?</h4>
+            <p class="text-sm text-slate-600 font-medium mt-1">Pilih materi dan masukan kode akses turnamen dari Gurumu.</p>
+          </div>
+        </div>
+        <button onclick="switchTab('game')" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all">
+          Masuk Ruang Turnamen <i class="fa-solid fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- TAB 2: RUANG TURNAMEN MURID -->
+    <section id="tab-game" class="hidden space-y-6 fade-in">
+
+      <!-- STEP 0: PILIH BAB MATERI -->
+      <div id="step-chapter-select" class="max-w-5xl mx-auto space-y-6">
+        <div class="text-center bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+          <span class="bg-indigo-100 text-indigo-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Arena Kelas XI</span>
+          <h2 class="text-3xl font-black text-slate-900 mt-4 tracking-tight">Pilih Materi Turnamen</h2>
+          <p class="text-sm text-slate-500 mt-2 font-medium">Klik pada bab yang diperintahkan oleh gurumu hari ini.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <button onclick="selectChapterGate('ARGUMENTASI', 'Bab 1: Teks Argumentasi')" class="bg-white hover:bg-indigo-50 border-2 border-slate-100 hover:border-indigo-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">1</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Teks Argumentasi</h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: ARGUMENTASI</p>
+          </button>
+          
+          <button onclick="selectChapterGate('TEKSBERITA', 'Bab 2: Teks Berita')" class="bg-white hover:bg-blue-50 border-2 border-slate-100 hover:border-blue-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-blue-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">2</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Teks Berita</h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: TEKSBERITA</p>
+          </button>
+
+          <button onclick="selectChapterGate('CERPEN', 'Bab 3: Cerpen')" class="bg-white hover:bg-emerald-50 border-2 border-slate-100 hover:border-emerald-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">3</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Cerpen <span class="text-sm font-semibold text-slate-500">(Cerita Pendek)</span></h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: CERPEN</p>
+          </button>
+
+          <button onclick="selectChapterGate('PUISI', 'Bab 4: Puisi')" class="bg-white hover:bg-pink-50 border-2 border-slate-100 hover:border-pink-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-pink-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-pink-100 text-pink-600 group-hover:bg-pink-600 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">4</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Puisi</h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: PUISI</p>
+          </button>
+
+          <button onclick="selectChapterGate('DRAMA', 'Bab 5: Drama')" class="bg-white hover:bg-amber-50 border-2 border-slate-100 hover:border-amber-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">5</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Drama</h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: DRAMA</p>
+          </button>
+
+          <button onclick="selectChapterGate('KARYAILMIAH', 'Bab 6: Karya Ilmiah')" class="bg-white hover:bg-teal-50 border-2 border-slate-100 hover:border-teal-500 p-7 rounded-3xl text-left transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-teal-100 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            <div class="w-14 h-14 bg-teal-100 text-teal-600 group-hover:bg-teal-600 group-hover:text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-4 transition-all relative z-10">6</div>
+            <h3 class="font-bold text-xl text-slate-900 relative z-10">Karya Ilmiah</h3>
+            <p class="text-xs text-slate-500 mt-2 font-semibold bg-slate-100 px-3 py-1 inline-block rounded-lg relative z-10">Kode: KARYAILMIAH</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 1: GATE KODE AKSES TURNAMEN MURID -->
+      <div id="step-passcode-gate" class="hidden max-w-md mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-xl text-center space-y-6 fade-in">
+        <button onclick="backToChapterSelect()" class="text-xs font-bold text-slate-400 hover:text-indigo-600 flex items-center justify-center mx-auto transition-colors">
+          <i class="fa-solid fa-arrow-left mr-1.5"></i> Kembali Pilih Materi
+        </button>
+        
+        <div class="w-20 h-20 bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+
+        <div>
+          <span id="display-selected-materi" class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-black px-3 py-1.5 rounded-full mb-3 inline-block tracking-widest uppercase">Materi</span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Kode Akses Arena</h2>
+          <p class="text-sm text-slate-500 mt-1.5 font-medium">Masukan kode turnamen (tanpa spasi).</p>
+        </div>
+
+        <form onsubmit="handleVerifyPasscode(event)" class="space-y-4">
+          <div>
+            <input type="text" id="input-passcode" required placeholder="Ketik Kode Disini..." class="w-full text-center tracking-widest font-mono text-lg uppercase px-5 py-4 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none transition-all font-bold text-indigo-900 placeholder-slate-300">
+            <p id="passcode-error" class="text-xs text-red-600 font-bold mt-2 hidden bg-red-50 py-1.5 rounded-lg"><i class="fa-solid fa-circle-exclamation mr-1"></i>Kode salah atau tidak valid!</p>
+          </div>
+
+          <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all text-sm">
+            Buka Gerbang Arena <i class="fa-solid fa-right-to-bracket ml-2"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- STEP 2: REGISTRASI KELOMPOK -->
+      <div id="step-setup" class="hidden max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-xl fade-in">
+        <div class="text-center mb-8">
+          <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest"><i class="fa-solid fa-check-circle mr-1"></i> Akses Dibuka</span>
+          <h2 class="text-3xl font-black text-slate-900 mt-4 tracking-tight">Identitas Kelompok</h2>
+          <p class="text-sm text-slate-500 mt-1.5 font-medium">Data kelompok ini akan tercatat resmi di LMS Guru berdasarkan Kelas.</p>
+        </div>
+
+        <form id="form-setup" onsubmit="handleStartGroup(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div>
+                <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-2 pl-1">Nama Kelompok / Tim</label>
+                <input type="text" id="input-group-name" required placeholder="Contoh: Kelompok Hebat 1" class="w-full px-5 py-3.5 border-2 border-slate-200 rounded-2xl text-base font-bold text-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder-slate-300">
+             </div>
+             <div>
+                <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-2 pl-1">Pilihan Kelas</label>
+                <input type="text" id="input-class-name" required placeholder="Contoh: XI IPA 1" class="w-full px-5 py-3.5 border-2 border-slate-200 rounded-2xl text-base font-bold text-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder-slate-300">
+             </div>
+          </div>
+
+          <div class="p-5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 text-xs text-indigo-900 shadow-inner">
+            <p class="font-black text-sm mb-2"><i class="fa-solid fa-route mr-1.5 text-indigo-500"></i> Aturan Main 6 Petualang:</p>
+            <p class="font-medium leading-relaxed opacity-80">Siapkan 6 anggota. Perangkat akan digilir bergantian dari Petualang 1 hingga Petualang 6. Pastikan setiap anggota siap mengetik alasan dengan logika yang cepat & tepat!</p>
+          </div>
+
+          <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all text-sm mt-2">
+            Mulai Misi Petualang 1 <i class="fa-solid fa-paper-plane ml-2"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- STEP 3: ARENA PERMAINAN (SOAL 6 STICKY NOTE) -->
+      <div id="step-play" class="hidden space-y-6 max-w-5xl mx-auto fade-in">
+        
+        <!-- Header Info Game -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
+          <div class="flex items-center space-x-4 relative z-10">
+            <div class="w-14 h-14 bg-gradient-to-br from-amber-300 to-amber-500 text-indigo-950 rounded-2xl font-black text-2xl flex items-center justify-center shadow-sm">
+              <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2 mb-0.5">
+                <span id="display-group" class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-md">Kelompok</span>
+                <span id="display-progress-badge" class="bg-indigo-100 border border-indigo-200 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">Soal 1/6</span>
+              </div>
+              <h3 id="display-role" class="text-2xl font-black text-indigo-900 tracking-tight">Petualang 1</h3>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3 bg-rose-50 border border-rose-200 text-rose-600 px-5 py-3 rounded-2xl font-mono font-black text-2xl shadow-sm relative z-10">
+            <i class="fa-solid fa-stopwatch animate-pulse"></i>
+            <span id="timer-display">05:00</span>
+          </div>
+        </div>
+
+        <!-- Kartu Soal Utama -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+          <div class="flex flex-col justify-center items-center mb-2">
+             <span id="display-materi-aktif" class="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 mb-3">MATERI</span>
+          </div>
+          <h3 id="question-text" class="text-lg sm:text-2xl font-black text-slate-800 leading-relaxed text-center px-2 sm:px-10">
+            "Pertanyaan Muncul Di Sini"
+          </h3>
+        </div>
+
+        <!-- Papan 6 Sticky Note -->
+        <div>
+          <label class="block text-sm font-black uppercase tracking-wide text-slate-700 mb-4 text-center"><i class="fa-solid fa-hand-pointer text-indigo-500 mr-2"></i>Pilih salah satu Sticky Note di bawah ini:</label>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6" id="sticky-board">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Textarea Alasan -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-3 pl-1">
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-700"><i class="fa-solid fa-pen-nib text-indigo-500 mr-1.5"></i>Tuliskan Alasanmu (Wajib):</label>
+              <span class="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Spam = 0 Poin!</span>
+            </div>
+            <textarea id="input-reason" rows="4" placeholder="AI akan mendeteksi susunan logis argumenmu. Jelaskan alasan secara struktural (Gunakan kata seperti: karena, berdasarkan, faktanya, dll)..." class="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none transition-all resize-none shadow-inner bg-slate-50 placeholder-slate-400"></textarea>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+            <span class="text-[11px] font-semibold text-slate-400 text-center sm:text-left bg-slate-50 px-3 py-1.5 rounded-lg"><i class="fa-solid fa-robot mr-1.5 text-slate-400"></i>Sistem menilai relevansi logika, bukan dari panjang teks.</span>
+            <button onclick="submitPlayerAnswer()" class="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all text-sm">
+              Kunci Jawaban <i class="fa-solid fa-lock ml-2"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STEP 4: TRANSISI KE PETUALANG BERIKUTNYA -->
+      <div id="step-transition" class="hidden max-w-md mx-auto bg-white rounded-3xl border border-slate-200 p-10 shadow-xl text-center space-y-6 fade-in">
+        <div class="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600 rounded-full flex items-center justify-center text-5xl mx-auto shadow-inner animate-bounce">
+          <i class="fa-solid fa-check"></i>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="transition-title">Jawaban Tersimpan!</h2>
+          <p class="text-sm text-slate-500 mt-2 font-medium">Bagus sekali. Sekarang serahkan perangkat ke temanmu.</p>
+        </div>
+
+        <div class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+          <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Giliran Berikutnya:</p>
+          <p id="next-player-name" class="text-2xl font-black text-indigo-900">Petualang 2</p>
+        </div>
+
+        <button onclick="startNextPlayerTurn()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all text-sm">
+          Mulai Misi <i class="fa-solid fa-play ml-2"></i>
+        </button>
+      </div>
+
+      <!-- STEP 5: HASIL AKHIR & REFLEKSI -->
+      <div id="step-final-results" class="hidden max-w-4xl mx-auto space-y-6 fade-in">
+        <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-3xl p-8 sm:p-10 text-white shadow-xl text-center space-y-4 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-4xl mx-auto text-amber-100 shadow-inner relative z-10">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <span class="bg-white/20 text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest relative z-10 backdrop-blur-sm shadow-sm border border-white/30">Turnamen Selesai</span>
+          <h2 class="text-3xl sm:text-4xl font-black relative z-10 tracking-tight" id="final-group-name">Kelompok</h2>
+          <p class="text-sm text-amber-50 max-w-lg mx-auto relative z-10 font-medium">Luar biasa! Hasil pengerjaan pada materi <strong id="final-materi-title" class="bg-white/20 px-2 py-0.5 rounded">Materi</strong> telah berhasil dikirim ke <strong>Dashboard LMS Guru</strong>.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-5 hover:shadow-md transition-shadow">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-black">
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Skor Tim</span>
+              <div class="flex items-baseline space-x-1.5 mt-1">
+                <span id="final-total-score" class="text-4xl font-black text-indigo-700 tracking-tighter">0</span>
+                <span class="text-xs font-bold text-slate-400">/ 600 Pts</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-5 hover:shadow-md transition-shadow">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl font-black">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Waktu Keseluruhan</span>
+              <span id="final-total-time" class="text-2xl font-black text-slate-800 block mt-1 tracking-tight">0m 0s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-slate-100 pb-4 gap-3">
+            <h3 class="font-black text-slate-800 text-lg tracking-tight"><i class="fa-solid fa-book-open-reader text-indigo-500 mr-2"></i> Lembar Refleksi Pembelajaran</h3>
+            <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest">Pelajari Kesalahanmu</span>
+          </div>
+          <div id="final-breakdown-container" class="space-y-5"></div>
+        </div>
+
+        <button onclick="resetWholeGame()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-slate-500/30 hover:-translate-y-1 transition-all text-sm flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Mulai Tim Baru / Ganti Materi</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- TAB 3: LMS DASHBOARD DATA GURU -->
+    <section id="tab-lms" class="hidden space-y-6 fade-in">
+
+      <!-- GATE PIN KHUSUS GURU -->
+      <div id="guru-pin-gate" class="max-w-md mx-auto bg-white rounded-3xl border border-amber-100 p-8 shadow-2xl shadow-indigo-500/10 text-center space-y-6 fade-in relative overflow-hidden">
+        <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Area Khusus Guru</h2>
+          <p class="text-sm text-slate-500 mt-1.5 font-medium">Masukan PIN Otorisasi untuk akses LMS.</p>
+        </div>
+        <form onsubmit="handleVerifyGuruPin(event)" class="space-y-4">
+          <div>
+            <input type="password" id="input-guru-pin" required placeholder="PIN Rahasia..." class="w-full text-center tracking-widest font-mono text-xl px-5 py-4 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 focus:outline-none transition-all font-bold text-slate-800">
+            <p id="guru-pin-error" class="text-xs text-red-600 font-bold mt-2 hidden bg-red-50 py-1.5 rounded-lg"><i class="fa-solid fa-circle-exclamation mr-1"></i>PIN Guru Salah!</p>
+          </div>
+          <button type="submit" class="w-full py-4 bg-amber-500 hover:bg-amber-600 text-indigo-950 font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 hover:-translate-y-1 transition-all text-sm uppercase tracking-wider">
+            Buka Dasbor LMS <i class="fa-solid fa-key ml-2"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- KONTEN LMS GURU TERBUKA -->
+      <div id="guru-lms-content" class="hidden flex flex-col space-y-6">
+
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-violet-800 to-fuchsia-800 text-white p-6 sm:p-8 shadow-xl">
+          <div class="absolute -right-6 -top-8 text-[9rem] opacity-10 rotate-12 pointer-events-none"><i class="fa-solid fa-chart-column"></i></div>
+          <div class="absolute -left-10 -bottom-14 w-48 h-48 bg-amber-400/25 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="relative">
+            <span class="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Dasbor Guru</span>
+            <h2 class="text-2xl sm:text-3xl font-black mt-3 tracking-tight">Pusat Kendali Turnamen</h2>
+            <p class="text-indigo-200 text-sm mt-1 font-medium max-w-xl">Pantau klasemen, telusuri jawaban siswa, dan kelola bank soal dalam satu tempat.</p>
+          </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-between bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex space-x-1 w-full sm:w-auto p-1 bg-slate-100 rounded-xl">
+            <button id="lms-nav-dashboard" onclick="switchLmsTab('dashboard')" class="flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm bg-white text-indigo-700 shadow-sm transition-all"><i class="fa-solid fa-chart-line mr-1.5"></i> Rekap Nilai Siswa</button>
+            <button id="lms-nav-editor" onclick="switchLmsTab('editor')" class="flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all"><i class="fa-solid fa-database mr-1.5"></i> Manajemen Bank Soal (Sticky Note)</button>
+          </div>
+          <button onclick="lockGuruLMS()" class="w-full sm:w-auto mt-2 sm:mt-0 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow transition-all">
+            <i class="fa-solid fa-lock mr-1.5"></i> Kunci LMS
+          </button>
+        </div>
+
+        <!-- 3A: SUB-TAB DASHBOARD REKAP -->
+        <div id="lms-view-dashboard" class="space-y-6 fade-in">
+
+          <!-- Kartu statistik -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25">
+              <i class="fa-solid fa-users absolute -right-2 -bottom-3 text-6xl opacity-15"></i>
+              <span class="text-[10px] font-black uppercase tracking-widest text-indigo-100">Total Kelompok</span>
+              <div id="stat-total-groups" class="text-4xl font-black mt-1 tracking-tighter">0</div>
+            </div>
+            <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+              <i class="fa-solid fa-chart-simple absolute -right-2 -bottom-3 text-6xl opacity-15"></i>
+              <span class="text-[10px] font-black uppercase tracking-widest text-emerald-100">Rata-Rata Skor</span>
+              <div id="stat-avg-score" class="text-4xl font-black mt-1 tracking-tighter">0</div>
+            </div>
+            <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/25">
+              <i class="fa-solid fa-bolt absolute -right-2 -bottom-3 text-6xl opacity-20"></i>
+              <span class="text-[10px] font-black uppercase tracking-widest text-amber-50">Tim Tercepat</span>
+              <div id="stat-fastest-group" class="text-base font-black mt-2 truncate">-</div>
+            </div>
+            <div class="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25">
+              <i class="fa-solid fa-crown absolute -right-2 -bottom-3 text-6xl opacity-20"></i>
+              <span class="text-[10px] font-black uppercase tracking-widest text-pink-100">Top Global</span>
+              <div id="stat-top-group" class="text-base font-black mt-2 truncate">-</div>
+            </div>
+          </div>
+
+          <!-- Podium -->
+          <div id="lms-podium-wrap" class="hidden bg-gradient-to-b from-indigo-50 to-white rounded-3xl border border-indigo-100 p-6 shadow-sm">
+            <h3 class="text-center text-xs font-black text-indigo-900 uppercase tracking-widest mb-5"><i class="fa-solid fa-trophy text-amber-500 mr-1.5"></i>Podium Juara</h3>
+            <div id="lms-podium" class="flex items-end justify-center gap-2 sm:gap-4"></div>
+          </div>
+
+          <!-- Filter & aksi -->
+          <div class="bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5"><i class="fa-solid fa-book text-indigo-500 mr-1"></i>Bab</label>
+                <select id="lms-filter-topic" onchange="renderLMSDashboard()" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-indigo-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none bg-slate-50 cursor-pointer transition-all">
+                  <option value="ALL">Semua Materi (Gabungan)</option>
+                  <option value="Bab 1: Teks Argumentasi">Bab 1: Teks Argumentasi</option>
+                  <option value="Bab 2: Teks Berita">Bab 2: Teks Berita</option>
+                  <option value="Bab 3: Cerpen">Bab 3: Cerpen</option>
+                  <option value="Bab 4: Puisi">Bab 4: Puisi</option>
+                  <option value="Bab 5: Drama">Bab 5: Drama</option>
+                  <option value="Bab 6: Karya Ilmiah">Bab 6: Karya Ilmiah</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5"><i class="fa-solid fa-users-rectangle text-indigo-500 mr-1"></i>Kelas</label>
+                <select id="lms-filter-class" onchange="renderLMSDashboard()" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-indigo-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none bg-slate-50 cursor-pointer transition-all">
+                  <option value="ALL">Semua Kelas</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5"><i class="fa-solid fa-magnifying-glass text-indigo-500 mr-1"></i>Cari Kelompok</label>
+                <input id="lms-search" type="search" oninput="renderLMSDashboard()" placeholder="Ketik nama kelompok..." class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-indigo-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none bg-slate-50 transition-all">
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <div>
+                <h3 class="text-lg font-black text-slate-900 tracking-tight">Papan Klasemen</h3>
+                <p class="text-[11px] text-slate-500 font-medium">Diurutkan dari skor tertinggi, lalu waktu tercepat. <span id="lms-count-chip" class="font-black text-indigo-600"></span></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="exportToCSV()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/30 transition-all"><i class="fa-solid fa-file-csv mr-1.5"></i> Unduh CSV</button>
+                <button onclick="clearTournamentData()" class="px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-xl transition-all" title="Hapus Semua Data"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabel klasemen -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[640px]">
+                <thead>
+                  <tr class="bg-gradient-to-r from-indigo-950 to-violet-900 text-indigo-100 font-black uppercase text-[10px] tracking-widest">
+                    <th class="p-4 whitespace-nowrap">Peringkat</th>
+                    <th class="p-4">Tim</th>
+                    <th class="p-4">Kelas</th>
+                    <th class="p-4 w-48">Skor Akhir</th>
+                    <th class="p-4">Waktu</th>
+                    <th class="p-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="lms-leaderboard-body" class="divide-y divide-slate-100 text-sm"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rincian Inspeksi -->
+          <div id="lms-inspector-card" class="hidden bg-white rounded-3xl border-2 border-indigo-100 p-6 sm:p-8 shadow-xl space-y-5 fade-in relative">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-4">
+              <div>
+                <span class="text-[10px] text-indigo-500 font-black uppercase tracking-widest"><i class="fa-solid fa-magnifying-glass mr-1"></i> Inspeksi Jawaban Tim</span>
+                <h3 id="inspector-group-title" class="font-black text-slate-900 text-xl mt-1 tracking-tight">Kelompok</h3>
+              </div>
+              <button onclick="closeInspector()" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <div id="inspector-breakdown-container" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+          </div>
+        </div>
+
+        <!-- 3B: SUB-TAB MANAJEMEN SOAL -->
+        <div id="lms-view-editor" class="hidden space-y-6 fade-in">
+          
+          <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-6 sm:p-8 rounded-3xl text-white shadow-lg relative overflow-hidden">
+             <i class="fa-solid fa-database absolute -right-4 -bottom-4 text-9xl opacity-10"></i>
+             <h2 class="text-2xl font-black relative z-10 tracking-tight">Bank Soal & 6 Sticky Note</h2>
+             <p class="text-sm text-slate-300 mt-2 font-medium relative z-10">Ubah Pertanyaan, isi teks ke-6 Sticky Note, centang mana saja yang bernilai Benar, dan edit refleksi penjelasannya.</p>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row items-center gap-4">
+            <label class="font-black text-slate-700 text-xs uppercase tracking-widest whitespace-nowrap"><i class="fa-solid fa-book text-indigo-500 mr-1.5"></i>Edit Materi:</label>
+            <select id="editor-select-topic" onchange="renderEditorView()" class="w-full sm:w-auto px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-indigo-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none bg-slate-50 cursor-pointer transition-all">
+              <option value="ARGUMENTASI">Bab 1: Teks Argumentasi</option>
+              <option value="TEKSBERITA">Bab 2: Teks Berita</option>
+              <option value="CERPEN">Bab 3: Cerpen</option>
+              <option value="PUISI">Bab 4: Puisi</option>
+              <option value="DRAMA">Bab 5: Drama</option>
+              <option value="KARYAILMIAH">Bab 6: Karya Ilmiah</option>
+            </select>
+          </div>
+
+          <!-- Container Form Editor -->
+          <div class="bg-white border border-slate-200 p-4 sm:p-8 rounded-3xl shadow-sm">
+             <div id="editor-forms-container" class="space-y-8">
+                <!-- Javascript will inject 6 forms here -->
+             </div>
+             
+             <div class="mt-8 pt-6 border-t-2 border-slate-100 flex flex-col sm:flex-row gap-4 justify-end">
+                <button onclick="resetEditorToDefault()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all">
+                  Kembalikan ke Soal Bawaan
+                </button>
+                <button onclick="saveEditedQuestions()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider text-sm rounded-xl shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1 transition-all">
+                  <i class="fa-solid fa-save mr-1.5"></i> Simpan Perubahan Materi Ini
+                </button>
+             </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Pemberitahuan Toast -->
+  <div id="toast-notification" class="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+     <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+     <span id="toast-msg">Pesan berhasil</span>
+  </div>
+
+  <!-- Firebase (database online agar data tersinkron antar perangkat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    // FUNGSI PESAN PEMBUKA
+    function closeWelcomeMessage() {
+      const msg = document.getElementById('welcome-overlay');
+      if (msg) {
+        msg.style.opacity = '0';
+        setTimeout(() => msg.remove(), 500); // Hapus elemen setelah animasi selesai
+      }
+    }
+    
+    // Pesan otomatis tertutup dalam 5 detik
+    setTimeout(closeWelcomeMessage, 5000);
+
+    // Konfigurasi Global
+    const REQUIRED_GURU_PIN = "NIACANTIK"; // Pin Rahasia Guru
+    let isGuruUnlocked = false;
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notification');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3000);
+    }
+
+    // ==========================================
+    // DATA BASE SOAL DENGAN 6 STICKY NOTE OPTIONS
+    // ==========================================
+    const DEFAULT_QUESTIONS_DATA = {
+      "ARGUMENTASI": [
+        { role: "Petualang 1", question: "Manakah di bawah ini yang merupakan contoh kalimat FAKTA dalam sebuah argumen?", options: [{ text: "Berdasarkan data BPS, inflasi naik 2%.", isCorrect: true },{ text: "Menurut saya, cuaca hari ini sangat buruk.", isCorrect: false },{ text: "Sebaiknya kita tidak begadang malam ini.", isCorrect: false },{ text: "Air mendidih pada suhu 100 derajat Celcius.", isCorrect: true },{ text: "Mungkin besok hujan lebat di pagi hari.", isCorrect: false },{ text: "Indonesia merdeka pada 17 Agustus 1945.", isCorrect: true }], explanation: "Fakta adalah kejadian yang nyata, dapat dibuktikan kebenarannya, dan bersifat objektif (seperti data BPS, hukum sains, atau sejarah)." },
+        { role: "Petualang 2", question: "Apa tujuan utama dari teks argumentasi?", options: [{ text: "Menceritakan sebuah dongeng fiktif.", isCorrect: false },{ text: "Menyakinkan pembaca agar setuju dengan penulis.", isCorrect: true },{ text: "Memberikan panduan langkah-langkah.", isCorrect: false },{ text: "Membuktikan pendapat lewat fakta dan logika.", isCorrect: true },{ text: "Menggambarkan keindahan sebuah tempat.", isCorrect: false },{ text: "Menghibur pembaca dengan cerita lucu.", isCorrect: false }], explanation: "Teks argumentasi ditulis untuk meyakinkan atau membujuk pembaca akan suatu gagasan dengan melampirkan fakta dan logika pendukung." },
+        { role: "Petualang 3", question: "Bagian struktur teks argumentasi yang berisi kesimpulan disebut...", options: [{text: "Tesis / Pernyataan Pendapat", isCorrect: false}, {text: "Orientasi", isCorrect: false}, {text: "Penegasan Ulang", isCorrect: true}, {text: "Rangkaian Argumen", isCorrect: false}, {text: "Resolusi", isCorrect: false}, {text: "Koda", isCorrect: false}], explanation: "Bagian penutup argumentasi disebut penegasan ulang. Fungsinya menyimpulkan dan menegaskan kembali tesis awal." },
+        { role: "Petualang 4", question: "Kalimat mana yang menunjukkan OPINI?", options: [{text: "Matahari terbit dari timur.", isCorrect: false}, {text: "Makanan ini rasanya terlalu asin.", isCorrect: true}, {text: "Penduduk bumi mencapai 8 miliar.", isCorrect: false}, {text: "Film itu adalah film terbaik tahun ini.", isCorrect: true}, {text: "Kucing adalah hewan mamalia.", isCorrect: false}, {text: "Belajar matematika sangat membosankan.", isCorrect: true}], explanation: "Opini bersifat subjektif, bergantung pada perasaan atau pandangan pribadi seseorang (contoh: rasa makanan, film terbaik, membosankan)." },
+        { role: "Petualang 5", question: "Syarat paragraf argumentasi yang baik adalah...", options: [{text: "Bersifat fiktif", isCorrect: false}, {text: "Hanya berisi khayalan penulis", isCorrect: false}, {text: "Disertai alasan dan bukti yang kuat", isCorrect: true}, {text: "Menggunakan bahasa kiasan/majas berlebihan", isCorrect: false}, {text: "Strukturnya runtut dan logis", isCorrect: true}, {text: "Bersifat objektif berdasarkan data", isCorrect: true}], explanation: "Argumentasi yang baik harus objektif, logis, dan didukung oleh bukti kuat agar tidak dianggap sekadar bualan." },
+        { role: "Petualang 6", question: "Manakah kata hubung (konjungsi) yang sering dipakai dalam argumentasi?", options: [{text: "Pada zaman dahulu...", isCorrect: false}, {text: "Oleh karena itu...", isCorrect: true}, {text: "Bagaikan...", isCorrect: false}, {text: "Dengan demikian...", isCorrect: true}, {text: "Kesimpulannya...", isCorrect: true}, {text: "Alkisah...", isCorrect: false}], explanation: "Konjungsi penyimpulan (seperti: oleh karena itu, dengan demikian, jadi) sangat sering dipakai di bagian argumen dan penegasan ulang." }
+      ],
+      "TEKSBERITA": [
+        { role: "Petualang 1", question: "Unsur 'Siapa' (Who) dalam teks berita biasanya menjelaskan tentang...", options: [{text: "Waktu kejadian peristiwa.", isCorrect: false}, {text: "Tokoh atau orang yang terlibat peristiwa.", isCorrect: true}, {text: "Alasan mengapa hal itu terjadi.", isCorrect: false}, {text: "Korban dari sebuah kejadian.", isCorrect: true}, {text: "Tempat peristiwa berlangsung.", isCorrect: false}, {text: "Pelaku atau pihak yang berwenang.", isCorrect: true}], explanation: "Unsur 'Siapa' berfokus pada subjek manusia atau lembaga yang terlibat (pelaku, korban, atau narasumber)." },
+        { role: "Petualang 2", question: "Struktur teks berita yang paling penting dan diletakkan di awal disebut...", options: [{text: "Ekor Berita", isCorrect: false}, {text: "Kepala Berita (Lead)", isCorrect: true}, {text: "Koda", isCorrect: false}, {text: "Teras Berita", isCorrect: true}, {text: "Tubuh Berita", isCorrect: false}, {text: "Resolusi", isCorrect: false}], explanation: "Teks berita menggunakan struktur Piramida Terbalik. Bagian terpenting diletakkan di awal yang disebut Kepala atau Teras Berita (Lead)." },
+        { role: "Petualang 3", question: "Kalimat manakah yang memenuhi syarat sebagai kalimat objektif jurnalistik?", options: [{text: "Pencuri itu pantas dihukum mati.", isCorrect: false}, {text: "Kecelakaan terjadi pada pukul 14.00 WIB.", isCorrect: true}, {text: "Untung saja tidak ada korban jiwa.", isCorrect: false}, {text: "Polisi berhasil menangkap tersangka di rumahnya.", isCorrect: true}, {text: "Cuaca hari ini sangat menyebalkan.", isCorrect: false}, {text: "Harga beras naik Rp 2.000 per kilogram.", isCorrect: true}], explanation: "Kalimat berita harus objektif, melaporkan fakta dan data secara netral tanpa melibatkan emosi atau opini pribadi jurnalis." },
+        { role: "Petualang 4", question: "Salah satu ciri bahasa teks berita adalah...", options: [{text: "Menggunakan bahasa baku / standar", isCorrect: true}, {text: "Banyak memakai bahasa gaul", isCorrect: false}, {text: "Komunikatif dan mudah dipahami", isCorrect: true}, {text: "Berbelit-belit agar panjang", isCorrect: false}, {text: "Bersifat ambigu/bermakna ganda", isCorrect: false}, {text: "Lugas (langsung ke inti/denotatif)", isCorrect: true}], explanation: "Bahasa jurnalistik harus baku (standar), lugas, dan komunikatif agar informasi cepat ditangkap oleh semua kalangan masyarakat." },
+        { role: "Petualang 5", question: "Apa fungsi dari unsur 'Mengapa' (Why) dalam berita?", options: [{text: "Menjelaskan lokasi secara detail", isCorrect: false}, {text: "Menyebutkan nama saksi", isCorrect: false}, {text: "Menjelaskan penyebab/alasan kejadian", isCorrect: true}, {text: "Menunjukkan waktu pasti", isCorrect: false}, {text: "Memberi tahu latar belakang masalah", isCorrect: true}, {text: "Menuliskan kerugian kejadian", isCorrect: false}], explanation: "Unsur 'Mengapa' (Why) bertujuan mengupas akar masalah, penyebab, atau latar belakang terjadinya peristiwa tersebut." },
+        { role: "Petualang 6", question: "Manakah pernyataan yang BENAR terkait etika penulisan berita?", options: [{text: "Boleh menyebarkan identitas korban anak.", isCorrect: false}, {text: "Harus menggunakan fakta yang akurat.", isCorrect: true}, {text: "Boleh memihak salah satu kelompok.", isCorrect: false}, {text: "Berita tidak boleh mencampurkan fakta dan opini.", isCorrect: true}, {text: "Judul berita boleh menipu pembaca (clickbait).", isCorrect: false}, {text: "Wartawan harus independen.", isCorrect: true}], explanation: "Etika jurnalistik mewajibkan wartawan bersifat independen, akurat, dan tidak mencampurkan fakta dengan opini pribadi demi menjaga kepercayaan publik." }
+      ],
+      "CERPEN": [
+        { role: "Petualang 1", question: "Manakah yang merupakan ciri khas Cerpen?", options: [{text: "Alur ceritanya kompleks dan bercabang", isCorrect: false}, {text: "Selesai dibaca sekali duduk", isCorrect: true}, {text: "Memiliki satu konflik utama", isCorrect: true}, {text: "Menceritakan sejarah nyata", isCorrect: false}, {text: "Jumlah tokohnya sangat banyak", isCorrect: false}, {text: "Fokus pada satu peristiwa penting", isCorrect: true}], explanation: "Cerpen (Cerita Pendek) berfokus pada satu kejadian (konflik sentral) dan dirancang agar habis dibaca sekali duduk." },
+        { role: "Petualang 2", question: "Unsur intrinsik cerpen yang mengatur jalannya cerita adalah...", options: [{text: "Tema", isCorrect: false}, {text: "Amanat", isCorrect: false}, {text: "Alur / Plot", isCorrect: true}, {text: "Latar Tempat", isCorrect: false}, {text: "Jalan Cerita", isCorrect: true}, {text: "Gaya Bahasa", isCorrect: false}], explanation: "Alur atau Plot adalah rangkaian peristiwa yang memiliki hubungan sebab-akibat yang menggerakkan jalannya cerita." },
+        { role: "Petualang 3", question: "Sudut pandang orang pertama ditandai dengan penggunaan kata ganti...", options: [{text: "Dia", isCorrect: false}, {text: "Mereka", isCorrect: false}, {text: "Aku", isCorrect: true}, {text: "Beliau", isCorrect: false}, {text: "Saya", isCorrect: true}, {text: "Kami", isCorrect: true}], explanation: "Sudut pandang orang pertama membuat penulis seolah ikut terlibat langsung dalam cerita dengan memakai kata 'Aku', 'Saya', atau 'Kami'." },
+        { role: "Petualang 4", question: "Manakah yang termasuk Latar (Setting) Suasana?", options: [{text: "Di pagi hari yang cerah", isCorrect: false}, {text: "Mencekam dan menakutkan", isCorrect: true}, {text: "Di ruang kelas XI", isCorrect: false}, {text: "Sepi dan mengharukan", isCorrect: true}, {text: "Tahun 1945", isCorrect: false}, {text: "Riang gembira", isCorrect: true}], explanation: "Latar suasana menggambarkan kondisi emosi atau psikologis lingkungan cerita, seperti mencekam, sedih, atau gembira." },
+        { role: "Petualang 5", question: "Karakter penentang tokoh utama (biasanya jahat) disebut...", options: [{text: "Protagonis", isCorrect: false}, {text: "Antagonis", isCorrect: true}, {text: "Tritagonis", isCorrect: false}, {text: "Figuran", isCorrect: false}, {text: "Musuh Utama", isCorrect: true}, {text: "Pahlawan", isCorrect: false}], explanation: "Antagonis adalah karakter yang menciptakan konflik dan menentang tujuan dari tokoh utama (Protagonis)." },
+        { role: "Petualang 6", question: "Pesan moral yang ingin disampaikan penulis dalam cerpen disebut...", options: [{text: "Tema", isCorrect: false}, {text: "Alur", isCorrect: false}, {text: "Amanat", isCorrect: true}, {text: "Pesan Kehidupan", isCorrect: true}, {text: "Sudut Pandang", isCorrect: false}, {text: "Gaya Bahasa", isCorrect: false}], explanation: "Amanat adalah pesan moral atau nilai kehidupan yang secara tersirat/tersurat dititipkan penulis untuk pembaca." }
+      ],
+      "PUISI": [
+        { role: "Petualang 1", question: "Ciri utama bahasa puisi dibandingkan prosa adalah...", options: [{text: "Bahasa kiasan yang padat", isCorrect: true}, {text: "Kalimatnya sangat panjang", isCorrect: false}, {text: "Banyak menggunakan paragraf", isCorrect: false}, {text: "Kaya akan makna konotasi (tersirat)", isCorrect: true}, {text: "Bersifat lugas seperti berita", isCorrect: false}, {text: "Mengutamakan rima dan irama", isCorrect: true}], explanation: "Bahasa puisi dipadatkan dan dipilih secara khusus (diksi) untuk menciptakan rima, irama, dan makna yang mendalam." },
+        { role: "Petualang 2", question: "Majas yang membandingkan benda mati seolah hidup adalah...", options: [{text: "Hiperbola", isCorrect: false}, {text: "Personifikasi", isCorrect: true}, {text: "Metafora", isCorrect: false}, {text: "Litotes", isCorrect: false}, {text: "Penginsanan", isCorrect: true}, {text: "Ironi", isCorrect: false}], explanation: "Personifikasi (Penginsanan) memberi sifat/perilaku manusia pada benda mati. Contoh: Angin menari-nari." },
+        { role: "Petualang 3", question: "Manakah yang merupakan Imaji Pendengaran (Auditori)?", options: [{text: "Warna merah merona", isCorrect: false}, {text: "Suara guntur menggelegar", isCorrect: true}, {text: "Dinginnya malam", isCorrect: false}, {text: "Kicauan burung di pagi hari", isCorrect: true}, {text: "Kasar permukaannya", isCorrect: false}, {text: "Tangisan yang menyayat hati", isCorrect: true}], explanation: "Imaji auditori memancing indra pendengaran pembaca agar seolah-olah ikut mendengar apa yang digambarkan dalam puisi." },
+        { role: "Petualang 4", question: "Bentuk perwajahan fisik puisi (margin, susunan baris) disebut...", options: [{text: "Tipografi", isCorrect: true}, {text: "Diksi", isCorrect: false}, {text: "Rima", isCorrect: false}, {text: "Perwajahan Puisi", isCorrect: true}, {text: "Enjambemen", isCorrect: false}, {text: "Imaji", isCorrect: false}], explanation: "Tipografi adalah bentuk visual/tata letak puisi di atas kertas yang turut memberikan andil terhadap makna." },
+        { role: "Petualang 5", question: "Persamaan bunyi di akhir baris puisi disebut...", options: [{text: "Rima", isCorrect: true}, {text: "Bait", isCorrect: false}, {text: "Sajak", isCorrect: true}, {text: "Diksi", isCorrect: false}, {text: "Tipografi", isCorrect: false}, {text: "Persajakan", isCorrect: true}], explanation: "Rima atau sajak adalah pengulangan bunyi yang sama (misal a-a-a-a atau a-b-a-b) yang memberi keindahan irama saat dibaca." },
+        { role: "Petualang 6", question: "Puisi yang tidak lagi terikat aturan baris, rima, dan suku kata disebut...", options: [{text: "Pantun", isCorrect: false}, {text: "Gurindam", isCorrect: false}, {text: "Puisi Bebas / Modern", isCorrect: true}, {text: "Syair", isCorrect: false}, {text: "Puisi Kontemporer", isCorrect: true}, {text: "Mantra", isCorrect: false}], explanation: "Puisi bebas (modern) tidak kaku seperti puisi lama. Penyair bebas berekspresi tanpa batasan jumlah baris atau rima yang pasti." }
+      ],
+      "DRAMA": [
+        { role: "Petualang 1", question: "Ciri utama naskah drama adalah...", options: [{text: "Berisi bait dan rima", isCorrect: false}, {text: "Ditulis dalam bentuk dialog", isCorrect: true}, {text: "Ditujukan untuk dipentaskan", isCorrect: true}, {text: "Banyak deskripsi tempat", isCorrect: false}, {text: "Memiliki petunjuk lakuan (Kramagung)", isCorrect: true}, {text: "Dibaca dalam hati", isCorrect: false}], explanation: "Naskah drama sangat bertumpu pada dialog antar tokoh dan petunjuk gerak (kramagung) karena tujuannya adalah pementasan teater." },
+        { role: "Petualang 2", question: "Kata pengantar di awal pementasan drama disebut...", options: [{text: "Epilog", isCorrect: false}, {text: "Prolog", isCorrect: true}, {text: "Dialog", isCorrect: false}, {text: "Monolog", isCorrect: false}, {text: "Pembuka Cerita", isCorrect: true}, {text: "Kramagung", isCorrect: false}], explanation: "Prolog adalah narasi pembuka yang diucapkan di awal pertunjukan untuk memberi gambaran latar atau sinopsis cerita." },
+        { role: "Petualang 3", question: "Petunjuk gerak, ekspresi, atau aksi aktor yang ditulis di dalam kurung disebut...", options: [{text: "Wawancang", isCorrect: false}, {text: "Kramagung", isCorrect: true}, {text: "Petunjuk Lakuan", isCorrect: true}, {text: "Prolog", isCorrect: false}, {text: "Epilog", isCorrect: false}, {text: "Catatan Sutradara", isCorrect: true}], explanation: "Kramagung (petunjuk lakuan) mengarahkan aktor bagaimana harus bergerak, nada bicara, atau properti apa yang dipakai." },
+        { role: "Petualang 4", question: "Percakapan seorang tokoh dengan dirinya sendiri di panggung disebut...", options: [{text: "Dialog", isCorrect: false}, {text: "Epilog", isCorrect: false}, {text: "Monolog", isCorrect: true}, {text: "Solilokui", isCorrect: true}, {text: "Kramagung", isCorrect: false}, {text: "Wawancang", isCorrect: false}], explanation: "Monolog adalah saat seorang tokoh berbicara sendiri, menyampaikan isi pikiran atau perasaannya kepada penonton." },
+        { role: "Petualang 5", question: "Tokoh penengah yang mendamaikan Protagonis dan Antagonis disebut...", options: [{text: "Figuran", isCorrect: false}, {text: "Tritagonis", isCorrect: true}, {text: "Tokoh Pembantu", isCorrect: false}, {text: "Sutradara", isCorrect: false}, {text: "Penengah", isCorrect: true}, {text: "Antagonis", isCorrect: false}], explanation: "Tritagonis adalah karakter pendukung yang biasanya bijak dan berperan melerai konflik antar tokoh utama." },
+        { role: "Petualang 6", question: "Bagian penutup cerita drama yang berisi kesimpulan atau amanat disebut...", options: [{text: "Prolog", isCorrect: false}, {text: "Kramagung", isCorrect: false}, {text: "Monolog", isCorrect: false}, {text: "Epilog", isCorrect: true}, {text: "Kata Penutup", isCorrect: true}, {text: "Wawancang", isCorrect: false}], explanation: "Epilog diucapkan di akhir pertunjukan untuk menyimpulkan kisah atau menyampaikan pesan moral kepada penonton." }
+      ],
+      "KARYAILMIAH": [
+        { role: "Petualang 1", question: "Sifat utama bahasa dalam karya ilmiah adalah...", options: [{text: "Banyak majas", isCorrect: false}, {text: "Baku dan formal", isCorrect: true}, {text: "Lugas (denotatif)", isCorrect: true}, {text: "Menggunakan bahasa gaul", isCorrect: false}, {text: "Objektif dan logis", isCorrect: true}, {text: "Sangat emosional", isCorrect: false}], explanation: "Karya ilmiah wajib menggunakan ragam bahasa baku, makna sebenarnya (denotatif), serta disusun secara objektif dan logis." },
+        { role: "Petualang 2", question: "Daftar pustaka dalam karya ilmiah berfungsi untuk...", options: [{text: "Membuat makalah jadi tebal", isCorrect: false}, {text: "Menghindari plagiarisme (jiplakan)", isCorrect: true}, {text: "Memberikan kredit pada penulis asli", isCorrect: true}, {text: "Syarat wajib penulisan akademik", isCorrect: true}, {text: "Menyusun hipotesis", isCorrect: false}, {text: "Menulis kesimpulan", isCorrect: false}], explanation: "Mencantumkan daftar pustaka adalah etika akademik untuk menghargai sumber rujukan dan mencegah plagiat." },
+        { role: "Petualang 3", question: "Dugaan atau jawaban sementara dari suatu penelitian disebut...", options: [{text: "Abstrak", isCorrect: false}, {text: "Hipotesis", isCorrect: true}, {text: "Asumsi Penelitian", isCorrect: true}, {text: "Kesimpulan", isCorrect: false}, {text: "Saran", isCorrect: false}, {text: "Landasan Teori", isCorrect: false}], explanation: "Hipotesis adalah jawaban sementara peneliti yang harus dibuktikan kebenarannya melalui pengambilan data di lapangan/lab." },
+        { role: "Petualang 4", question: "Struktur karya ilmiah bagian awal yang merangkum keseluruhan isi secara singkat disebut...", options: [{text: "Latar Belakang", isCorrect: false}, {text: "Abstrak", isCorrect: true}, {text: "Ringkasan Eksekutif", isCorrect: true}, {text: "Daftar Isi", isCorrect: false}, {text: "Pendahuluan", isCorrect: false}, {text: "Sari Karangan", isCorrect: true}], explanation: "Abstrak diletakkan di halaman paling depan, berisi rangkuman latar belakang, metode, dan hasil agar pembaca cepat paham isi karya." },
+        { role: "Petualang 5", question: "Manakah yang BUKAN merupakan bagian dari Bab Pendahuluan?", options: [{text: "Latar Belakang Masalah", isCorrect: false}, {text: "Rumusan Masalah", isCorrect: false}, {text: "Hasil Penelitian", isCorrect: true}, {text: "Tujuan Penelitian", isCorrect: false}, {text: "Daftar Pustaka", isCorrect: true}, {text: "Kesimpulan", isCorrect: true}], explanation: "Hasil, Kesimpulan, dan Daftar Pustaka berada di bab-bab akhir, bukan di Bab I (Pendahuluan)." },
+        { role: "Petualang 6", question: "Sikap yang salah saat menulis karya ilmiah adalah...", options: [{text: "Jujur dengan hasil data", isCorrect: false}, {text: "Memanipulasi data agar sesuai keinginan", isCorrect: true}, {text: "Menyontek karya orang tanpa izin", isCorrect: true}, {text: "Mencantumkan referensi jelas", isCorrect: false}, {text: "Merekayasa hasil wawancara", isCorrect: true}, {text: "Sistematis dalam menyusun struktur", isCorrect: false}], explanation: "Peneliti dituntut memiliki kejujuran akademik tinggi. Manipulasi, rekayasa data, dan plagiarisme adalah pelanggaran sangat berat." }
+      ]
+    };
+
+    // ===================================
+    // PENYIMPANAN TERPUSAT (FIREBASE FIRESTORE)
+    // ===================================
+    // >>> ISI DENGAN KONFIGURASI PROYEK FIREBASE ANDA (lihat panduan) <<<
+    const FIREBASE_CONFIG = {
+      apiKey: "ISI_API_KEY",
+      authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+      projectId: "ISI_PROJECT_ID",
+      storageBucket: "ISI_PROJECT_ID.appspot.com",
+      messagingSenderId: "ISI_SENDER_ID",
+      appId: "ISI_APP_ID"
+    };
+
+    const LMS_KEY = 'asni_lms_records_stcky';
+    const QUESTIONS_KEY = 'asni_custom_questions2';
+    const CLOUD_ON = !!FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith("ISI_") && typeof firebase !== 'undefined';
+    let fdb = null;
+    let lmsCache = [];
+    let questionsCache = null;
+
+    function setSyncBadge(state) {
+      const b = document.getElementById('sync-badge');
+      if (!b) return;
+      const map = {
+        local:   ['bg-slate-700 text-white', 'fa-hard-drive', 'Mode lokal: data TIDAK dibagi antar perangkat'],
+        loading: ['bg-amber-500 text-indigo-950', 'fa-arrows-rotate fa-spin', 'Menghubungkan ke server...'],
+        online:  ['bg-emerald-600 text-white', 'fa-cloud', 'Tersinkron antar perangkat'],
+        error:   ['bg-red-600 text-white', 'fa-triangle-exclamation', 'Server tidak terhubung. Periksa internet / pengaturan Firebase']
+      };
+      const [cls, icon, text] = map[state];
+      b.className = 'fixed bottom-3 left-3 z-40 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg flex items-center gap-2 ' + cls;
+      b.innerHTML = '<i class="fa-solid ' + icon + '"></i><span>' + text + '</span>';
+    }
+
+    function recordDocId(r) {
+      const key = [r.topicTitle, r.className, r.groupName].map(x => String(x || '').toLowerCase().trim()).join('||');
+      return 'r_' + btoa(unescape(encodeURIComponent(key))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function initCloud() {
+      if (!CLOUD_ON) { setSyncBadge('local'); return; }
+      try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        fdb = firebase.firestore();
+        setSyncBadge('loading');
+
+        fdb.collection('lms_records').onSnapshot(snap => {
+          lmsCache = snap.docs.map(d => d.data());
+          setSyncBadge('online');
+          const dashVisible = isGuruUnlocked
+            && !document.getElementById('tab-lms').classList.contains('hidden')
+            && !document.getElementById('lms-view-dashboard').classList.contains('hidden');
+          if (dashVisible) renderLMSDashboard();
+        }, err => { console.error(err); setSyncBadge('error'); });
+
+        fdb.collection('settings').doc('questions').onSnapshot(doc => {
+          questionsCache = null;
+          if (doc.exists && doc.data().json) {
+            try { questionsCache = JSON.parse(doc.data().json); } catch (e) { console.error(e); }
+          }
+        }, err => console.error(err));
+      } catch (e) { console.error(e); setSyncBadge('error'); }
+    }
+
+    function getQuestionsData() {
+      const stored = CLOUD_ON ? (questionsCache ? JSON.stringify(questionsCache) : null) : localStorage.getItem(QUESTIONS_KEY);
+      if (stored) {
+        try { return JSON.parse(stored); } catch (e) { console.error(e); }
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_QUESTIONS_DATA));
+    }
+
+    function saveAllQuestionsData(dataObj) {
+      if (!CLOUD_ON) { localStorage.setItem(QUESTIONS_KEY, JSON.stringify(dataObj)); return Promise.resolve(true); }
+      questionsCache = JSON.parse(JSON.stringify(dataObj));
+      return fdb.collection('settings').doc('questions')
+        .set({ json: JSON.stringify(dataObj), updatedAt: new Date().toISOString() })
+        .then(() => true)
+        .catch(e => { console.error(e); showToast("Gagal menyimpan ke server!"); return false; });
+    }
+
+    function loadLMSRecords() {
+      return CLOUD_ON ? lmsCache.slice() : JSON.parse(localStorage.getItem(LMS_KEY) || '[]');
+    }
+
+    function saveGroupDataToLMS(record) {
+      if (!CLOUD_ON) {
+        let lmsData = JSON.parse(localStorage.getItem(LMS_KEY) || '[]');
+        const idx = lmsData.findIndex(g => g.groupName.toLowerCase() === record.groupName.toLowerCase() && g.className.toLowerCase() === record.className.toLowerCase() && g.topicTitle === record.topicTitle);
+        if (idx >= 0) lmsData[idx] = record; else lmsData.push(record);
+        localStorage.setItem(LMS_KEY, JSON.stringify(lmsData));
+        return Promise.resolve('ok');
+      }
+      const write = fdb.collection('lms_records').doc(recordDocId(record)).set(record).then(() => 'ok');
+      const slow = new Promise(res => setTimeout(() => res('slow'), 8000));
+      return Promise.race([write, slow]).catch(e => { console.error(e); return 'fail'; });
+    }
+
+    async function deleteAllLMSRecords() {
+      if (!CLOUD_ON) { localStorage.removeItem(LMS_KEY); return; }
+      const snap = await fdb.collection('lms_records').get();
+      for (let i = 0; i < snap.docs.length; i += 400) {
+        const batch = fdb.batch();
+        snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    // STATE GAME
+    let activeTopicId = "";
+    let activeTopicTitle = "";
+    let currentQuestions = [];
+    
+    let currentGroupName = "";
+    let currentClassName = "";
+    let currentRoleIndex = 0;
+    let groupAnswers = [];
+    let selectedSticky = ""; 
+    let selectedIsCorrect = false;
+    let timerInterval = null;
+    const TOTAL_TIME = 300;
+    let timeLeft = TOTAL_TIME;
+
+    // WARNA STICKY NOTE (Randomizer)
+    const stickyColors = [
+      "from-amber-100 to-yellow-200 border-amber-300 text-amber-900",
+      "from-pink-100 to-rose-200 border-pink-300 text-pink-900",
+      "from-sky-100 to-blue-200 border-sky-300 text-sky-900",
+      "from-emerald-100 to-green-200 border-emerald-300 text-emerald-900",
+      "from-purple-100 to-fuchsia-200 border-purple-300 text-purple-900",
+      "from-orange-100 to-amber-200 border-orange-300 text-orange-900"
+    ];
+
+    // TAB NAVIGATION
+    function switchTab(tab) {
+      const tabModul = document.getElementById('tab-modul');
+      const tabGame = document.getElementById('tab-game');
+      const tabLms = document.getElementById('tab-lms');
+      
+      const btnModul = document.getElementById('btn-tab-modul');
+      const btnGame = document.getElementById('btn-tab-game');
+      const btnLms = document.getElementById('btn-tab-lms');
+
+      btnModul.className = "px-4 py-2 rounded-xl font-bold transition-all text-indigo-200 hover:text-white hover:bg-white/10";
+      btnGame.className = "px-4 py-2 rounded-xl font-bold transition-all text-indigo-200 hover:text-white hover:bg-white/10";
+      btnLms.className = "px-4 py-2 rounded-xl font-bold transition-all text-amber-300 hover:text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30";
+
+      tabModul.classList.add('hidden');
+      tabGame.classList.add('hidden');
+      tabLms.classList.add('hidden');
+
+      if (tab === 'modul') {
+        tabModul.classList.remove('hidden');
+        btnModul.className = "px-4 py-2 rounded-xl font-bold transition-all bg-white text-indigo-900 shadow-md";
+      } else if (tab === 'game') {
+        tabGame.classList.remove('hidden');
+        btnGame.className = "px-4 py-2 rounded-xl font-bold transition-all bg-white text-indigo-900 shadow-md";
+        if(!activeTopicId) {
+          document.getElementById('step-chapter-select').classList.remove('hidden');
+          document.getElementById('step-passcode-gate').classList.add('hidden');
+          document.getElementById('step-setup').classList.add('hidden');
+          document.getElementById('step-play').classList.add('hidden');
+          document.getElementById('step-transition').classList.add('hidden');
+          document.getElementById('step-final-results').classList.add('hidden');
+        }
+      } else if (tab === 'lms') {
+        tabLms.classList.remove('hidden');
+        btnLms.className = "px-4 py-2 rounded-xl font-bold transition-all bg-gradient-to-r from-amber-400 to-amber-500 text-indigo-950 shadow-md";
+        if (!isGuruUnlocked) {
+          document.getElementById('guru-pin-gate').classList.remove('hidden');
+          document.getElementById('guru-lms-content').classList.add('hidden');
+        } else {
+          document.getElementById('guru-pin-gate').classList.add('hidden');
+          document.getElementById('guru-lms-content').classList.remove('hidden');
+          renderLMSDashboard();
+        }
+      }
+    }
+
+    function switchLmsTab(view) {
+      const vDash = document.getElementById('lms-view-dashboard');
+      const vEdit = document.getElementById('lms-view-editor');
+      const btnDash = document.getElementById('lms-nav-dashboard');
+      const btnEdit = document.getElementById('lms-nav-editor');
+
+      vDash.classList.add('hidden');
+      vEdit.classList.add('hidden');
+      
+      btnDash.className = "flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all";
+      btnEdit.className = "flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all";
+
+      if(view === 'dashboard') {
+        vDash.classList.remove('hidden');
+        btnDash.className = "flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm bg-white text-indigo-700 shadow-sm transition-all";
+        renderLMSDashboard();
+      } else {
+        vEdit.classList.remove('hidden');
+        btnEdit.className = "flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-bold text-sm bg-white text-indigo-700 shadow-sm transition-all";
+        renderEditorView();
+      }
+    }
+
+    function handleVerifyGuruPin(e) {
+      e.preventDefault();
+      const inputPin = document.getElementById('input-guru-pin').value.trim();
+      const errEl = document.getElementById('guru-pin-error');
+      if (inputPin === REQUIRED_GURU_PIN) {
+        isGuruUnlocked = true;
+        errEl.classList.add('hidden');
+        document.getElementById('guru-pin-gate').classList.add('hidden');
+        document.getElementById('guru-lms-content').classList.remove('hidden');
+        document.getElementById('guru-lms-content').classList.add('fade-in');
+        document.getElementById('input-guru-pin').value = "";
+        switchLmsTab('dashboard');
+      } else {
+        errEl.classList.remove('hidden');
+      }
+    }
+    
+    function lockGuruLMS() {
+      isGuruUnlocked = false;
+      document.getElementById('guru-pin-gate').classList.remove('hidden');
+      document.getElementById('guru-lms-content').classList.add('hidden');
+      switchTab('modul');
+      showToast("LMS Terkunci Aman.");
+    }
+
+    function selectChapterGate(id, title) {
+      activeTopicId = id;
+      activeTopicTitle = title;
+      currentQuestions = getQuestionsData()[id]; 
+      
+      document.getElementById('display-selected-materi').innerText = title;
+      document.getElementById('step-chapter-select').classList.add('hidden');
+      document.getElementById('step-passcode-gate').classList.remove('hidden');
+      document.getElementById('input-passcode').value = "";
+      document.getElementById('passcode-error').classList.add('hidden');
+    }
+
+    function backToChapterSelect() {
+      activeTopicId = "";
+      document.getElementById('step-passcode-gate').classList.add('hidden');
+      document.getElementById('step-chapter-select').classList.remove('hidden');
+    }
+
+    function handleVerifyPasscode(e) {
+      e.preventDefault();
+      const inputPass = document.getElementById('input-passcode').value.trim().toUpperCase();
+      const errEl = document.getElementById('passcode-error');
+
+      if (inputPass === activeTopicId) {
+        errEl.classList.add('hidden');
+        document.getElementById('step-passcode-gate').classList.add('hidden');
+        document.getElementById('step-setup').classList.remove('hidden');
+      } else {
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function handleStartGroup(e) {
+      e.preventDefault();
+      currentGroupName = document.getElementById('input-group-name').value.trim();
+      currentClassName = document.getElementById('input-class-name').value.trim();
+      if (!currentGroupName || !currentClassName) return;
+      Sound.sfx('start');
+
+      currentRoleIndex = 0;
+      groupAnswers = [];
+      document.getElementById('step-setup').classList.add('hidden');
+      document.getElementById('step-play').classList.remove('hidden');
+      loadCurrentQuestion();
+    }
+
+    // ACAK STICKY NOTE AGAR POSISINYA BEDA-BEDA
+    function shuffleArray(array) {
+      let curId = array.length;
+      while (0 !== curId) {
+        let randId = Math.floor(Math.random() * curId);
+        curId -= 1;
+        let tmp = array[curId];
+        array[curId] = array[randId];
+        array[randId] = tmp;
+      }
+      return array;
+    }
+
+    function loadCurrentQuestion() {
+      const qData = currentQuestions[currentRoleIndex];
+      document.getElementById('display-group').innerText = currentGroupName;
+      document.getElementById('display-materi-aktif').innerText = activeTopicTitle;
+      document.getElementById('display-role').innerText = qData.role;
+      document.getElementById('display-progress-badge').innerText = `Soal ${currentRoleIndex + 1}/6`;
+      document.getElementById('question-text').innerText = `${qData.question}`;
+
+      selectedSticky = "";
+      selectedIsCorrect = false;
+      document.getElementById('input-reason').value = "";
+      
+      // Render 6 Sticky Notes
+      const board = document.getElementById('sticky-board');
+      board.innerHTML = "";
+      
+      // Acak urutan warna & opsi
+      let shuffledColors = shuffleArray([...stickyColors]);
+      let optionsWithIndex = qData.options.map((opt, i) => ({...opt, originalIndex: i}));
+      let shuffledOptions = shuffleArray(optionsWithIndex);
+
+      shuffledOptions.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = `sticky-opt-${idx}`;
+        // Bersihkan escape quote untuk HTML
+        const safeText = opt.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
+        btn.onclick = () => selectStickyNote(idx, safeText, opt.isCorrect);
+        btn.className = `sticky-note bg-gradient-to-br ${shuffledColors[idx]} border-2 p-4 sm:p-5 rounded-lg text-left focus:outline-none cursor-pointer group flex items-center justify-center min-h-[100px] h-full`;
+        btn.innerHTML = `<p class="font-bold text-sm sm:text-base leading-snug drop-shadow-sm text-center">${opt.text}</p>`;
+        
+        board.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function selectStickyNote(idx, text, isCorrect) {
+      selectedSticky = text;
+      selectedIsCorrect = isCorrect;
+      Sound.sfx('pop');
+      
+      // Reset all styles
+      const board = document.getElementById('sticky-board');
+      for(let i=0; i<board.children.length; i++) {
+        board.children[i].classList.remove('sticky-selected');
+        board.children[i].classList.add('opacity-70');
+      }
+      
+      // Highlight selected
+      const selectedBtn = document.getElementById(`sticky-opt-${idx}`);
+      selectedBtn.classList.remove('opacity-70');
+      selectedBtn.classList.add('sticky-selected');
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = TOTAL_TIME;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert("Waktu habis! Jawaban otomatis disimpan.");
+          submitPlayerAnswer();
+        }
+      }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+      const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const s = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${m}:${s}`;
+    }
+
+    // LOGIK PENILAIAN LENGKAP: Fokus pada logika & relevansi (Kata Kunci)
+    function evaluateReasonQuality(reasonText, isCorrect) {
+      const text = reasonText.trim().toLowerCase();
+      const words = text.split(/\s+/).filter(w => w.length > 0);
+      const wordCount = words.length;
+      const uniqueWordCount = new Set(words).size;
+      const hasGibberish = words.some(w => /(.)\1{3,}/.test(w) || w.length > 25);
+      
+      // Kata kunci logika/penalaran
+      const analyticalKeywords = [
+        "karena", "sebab", "oleh", "jadi", "maka", "artinya", "berarti", 
+        "menunjukkan", "fakta", "bukti", "merupakan", "adalah", 
+        "berdasarkan", "yaitu", "melainkan", "namun", "tetapi", "sedangkan",
+        "sehingga", "dengan demikian", "untuk", "sebagai", "contohnya", "misalnya"
+      ];
+      
+      let analyticalScore = 0;
+      words.forEach(w => {
+        const cleanWord = w.replace(/[.,!?]/g, '');
+        if(analyticalKeywords.includes(cleanWord)) {
+          analyticalScore++;
+        }
+      });
+
+      let qualityTitle = ""; let reasonPoints = 0; let badgeClass = "";
+      const optionBasePoints = isCorrect ? 50 : 0;
+      // Deteksi asal ketik
+      const isNgasal = hasGibberish || (wordCount > 0 && uniqueWordCount < 3) || (wordCount > 6 && uniqueWordCount / wordCount < 0.4);
+
+      if (isNgasal) {
+        qualityTitle = "Indikasi Spam / Ngasal";
+        reasonPoints = 0; 
+        badgeClass = "bg-red-100 text-red-800 border border-red-300 font-bold";
+      } else if (!isCorrect) {
+        // Salah opsi tapi ada penalaran logis
+        if (analyticalScore >= 1 || wordCount >= 8) {
+          qualityTitle = "Alasan Logis (Pilihan Salah)";
+          reasonPoints = 15;
+          badgeClass = "bg-slate-100 text-slate-700 border border-slate-300 font-bold";
+        } else {
+          qualityTitle = "Pilihan Salah & Alasan Lemah";
+          reasonPoints = 0;
+          badgeClass = "bg-red-50 text-red-700 border border-red-200 font-bold";
+        }
+      } else {
+        // Benar opsi, dinilai dari jumlah kata kunci logika
+        if (analyticalScore >= 2 && wordCount >= 5) {
+          qualityTitle = "Pemahaman Mendalam"; // Terdapat kerangka argumen yang logis
+          reasonPoints = 50; // Total 100
+          badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-300 font-black";
+        } else if (analyticalScore >= 1 || wordCount >= 5) {
+          qualityTitle = "Pemahaman Sedang";
+          reasonPoints = 30; // Total 80
+          badgeClass = "bg-blue-100 text-blue-800 border border-blue-300 font-black";
+        } else {
+          qualityTitle = "Pemahaman Dasar"; // Hanya menjawab tanpa argumen logis yang relevan
+          reasonPoints = 10; // Total 60
+          badgeClass = "bg-amber-100 text-amber-800 border border-amber-300 font-black";
+        }
+      }
+      return { qualityTitle, reasonPoints, score: optionBasePoints + reasonPoints, badgeClass };
+    }
+
+    function formatTime(sec) { return sec >= 60 ? `${Math.floor(sec/60)}m ${sec%60}s` : `${sec}s`; }
+
+    function submitPlayerAnswer() {
+      const reason = document.getElementById('input-reason').value.trim();
+      if (!selectedSticky) return alert("Pilih salah satu Sticky Note terlebih dahulu!");
+      if (!reason && timeLeft > 0) return alert("Tulis alasan secara analitis sebelum melanjutkan!");
+      
+      clearInterval(timerInterval);
+      const qData = currentQuestions[currentRoleIndex];
+      const isCorrect = selectedIsCorrect;
+      const eval = evaluateReasonQuality(reason, isCorrect);
+
+      groupAnswers.push({
+        role: qData.role,
+        question: qData.question,
+        sticky: selectedSticky, // Teks yang dipilih
+        isCorrect: isCorrect,
+        reason: reason,
+        explanation: qData.explanation,
+        score: eval.score,
+        qualityTitle: eval.qualityTitle,
+        badgeClass: eval.badgeClass,
+        timeSpentSec: TOTAL_TIME - timeLeft
+      });
+
+      currentRoleIndex++;
+      if (currentRoleIndex < 6) {
+        document.getElementById('step-play').classList.add('hidden');
+        document.getElementById('step-transition').classList.remove('hidden');
+        document.getElementById('transition-title').innerText = `Misi Selesai, ${qData.role}!`;
+        document.getElementById('next-player-name').innerText = currentQuestions[currentRoleIndex].role;
+      } else {
+        showFinalResultsAndSaveToLMS();
+      }
+    }
+
+    function startNextPlayerTurn() {
+      document.getElementById('step-transition').classList.add('hidden');
+      document.getElementById('step-play').classList.remove('hidden');
+      loadCurrentQuestion();
+    }
+
+    function showFinalResultsAndSaveToLMS() {
+      Sound.sfx('fanfare');
+      document.getElementById('step-play').classList.add('hidden');
+      document.getElementById('step-transition').classList.add('hidden');
+      document.getElementById('step-final-results').classList.remove('hidden');
+
+      document.getElementById('final-group-name').innerText = `${currentGroupName} (${currentClassName})`;
+      document.getElementById('final-materi-title').innerText = activeTopicTitle;
+
+      let totalScore = 0; let totalTimeSec = 0;
+      const bc = document.getElementById('final-breakdown-container');
+      bc.innerHTML = "";
+
+      groupAnswers.forEach((ans, idx) => {
+        totalScore += ans.score; totalTimeSec += ans.timeSpentSec;
+        bc.innerHTML += `
+          <div class="bg-white p-5 rounded-2xl border-2 border-slate-100 text-xs space-y-3 relative">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-300 to-indigo-500 rounded-l-2xl"></div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2 pl-2">
+              <div class="flex items-center space-x-2.5">
+                <span class="font-black text-indigo-900 text-sm">${ans.role}</span>
+                <span class="px-2.5 py-0.5 rounded-md text-[10px] uppercase ${ans.badgeClass}">${ans.qualityTitle}</span>
+              </div>
+              <div class="font-black text-sm text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100">Skor: ${ans.score}/100</div>
+            </div>
+            
+            <p class="text-slate-600 font-medium italic pl-2">Q: "${ans.question}"</p>
+            
+            <div class="grid grid-cols-1 gap-2 text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-100 ml-2">
+              <div><strong>Pilihan Sticky Note:</strong> <span class="font-black ${ans.isCorrect?'text-emerald-600':'text-red-600'}">"${ans.sticky}"</span> <span class="badge ${ans.isCorrect?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'} px-1.5 py-0.5 rounded ml-1">${ans.isCorrect?'(TEPAT)':'(KELIRU)'}</span></div>
+              <div><strong>Waktu Tempuh:</strong> ${formatTime(ans.timeSpentSec)}</div>
+            </div>
+            
+            <div class="bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 ml-2">
+              <p class="text-slate-700"><strong>Alasan Tim:</strong> "${ans.reason}"</p>
+            </div>
+
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-100 mt-2 ml-2 shadow-sm">
+              <h4 class="text-xs font-black text-emerald-800 mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i> Refleksi & Penjelasan Teori</h4>
+              <p class="text-emerald-900/90 leading-relaxed font-medium">${ans.explanation}</p>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('final-total-score').innerText = totalScore;
+      document.getElementById('final-total-time').innerText = formatTime(totalTimeSec);
+
+      saveGroupDataToLMS({
+        groupName: currentGroupName, className: currentClassName, topicTitle: activeTopicTitle, totalScore, totalTimeSec, answers: groupAnswers, timestamp: new Date().toLocaleString('id-ID')
+      }).then(r => {
+        if (r === 'ok') showToast("Hasil Terkirim ke LMS!");
+        else if (r === 'slow') showToast("Koneksi lambat. Jangan tutup halaman, hasil terkirim otomatis saat online.");
+        else showToast("Gagal terkirim! Periksa internet lalu hubungi guru.");
+      });
+    }
+
+    function resetWholeGame() {
+      location.reload();
+    }
+
+    // ===================================
+    // LMS RENDER DASHBOARD (GURU)
+    // ===================================
+    // Keamanan: semua teks dari siswa disaring sebelum ditampilkan di layar guru
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    const BAB_STYLE = {
+      1: ['bg-indigo-100 text-indigo-700', 'fa-scale-balanced'],
+      2: ['bg-sky-100 text-sky-700', 'fa-newspaper'],
+      3: ['bg-rose-100 text-rose-700', 'fa-book-open-reader'],
+      4: ['bg-fuchsia-100 text-fuchsia-700', 'fa-feather-pointed'],
+      5: ['bg-amber-100 text-amber-700', 'fa-masks-theater'],
+      6: ['bg-emerald-100 text-emerald-700', 'fa-flask']
+    };
+    const AVATAR_GRADS = ['from-indigo-500 to-violet-500', 'from-emerald-500 to-teal-500', 'from-rose-500 to-pink-500', 'from-amber-500 to-orange-500', 'from-sky-500 to-blue-600', 'from-fuchsia-500 to-purple-600'];
+
+    function babChip(title) {
+      const m = /Bab\s*(\d)/i.exec(title || '');
+      const st = BAB_STYLE[m ? m[1] : 0] || ['bg-slate-100 text-slate-600', 'fa-book'];
+      return `<span class="inline-flex items-center gap-1 ${st[0]} px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid ${st[1]}"></i>${esc(title)}</span>`;
+    }
+    function avatarFor(name) {
+      const n = String(name || '?').trim();
+      const ini = n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+      let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      return { ini: esc(ini), grad: AVATAR_GRADS[h % AVATAR_GRADS.length] };
+    }
+
+    let lmsViewList = [];
+
+    function renderLMSDashboard() {
+      const allLmsData = loadLMSRecords();
+      const filterValTopic = document.getElementById('lms-filter-topic').value;
+
+      const classSelect = document.getElementById('lms-filter-class');
+      const uniqueClasses = [...new Set(allLmsData.map(g => g.className))].filter(Boolean).sort();
+      const currentClassVal = classSelect.value;
+      classSelect.innerHTML = '<option value="ALL">Semua Kelas</option>';
+      uniqueClasses.forEach(cls => {
+        classSelect.innerHTML += `<option value="${esc(cls)}">${esc(cls)}</option>`;
+      });
+      classSelect.value = uniqueClasses.includes(currentClassVal) ? currentClassVal : 'ALL';
+      const filterValClass = classSelect.value;
+      const q = (document.getElementById('lms-search').value || '').trim().toLowerCase();
+
+      let lmsData = allLmsData;
+      if (filterValTopic !== "ALL") lmsData = lmsData.filter(g => g.topicTitle === filterValTopic);
+      if (filterValClass !== "ALL") lmsData = lmsData.filter(g => g.className === filterValClass);
+      if (q) lmsData = lmsData.filter(g => String(g.groupName || '').toLowerCase().includes(q));
+
+      const tbody = document.getElementById('lms-leaderboard-body');
+      const podiumWrap = document.getElementById('lms-podium-wrap');
+      const podium = document.getElementById('lms-podium');
+      tbody.innerHTML = "";
+      podium.innerHTML = "";
+      document.getElementById('lms-count-chip').innerText = lmsData.length ? `· ${lmsData.length} kelompok` : '';
+
+      if (lmsData.length === 0) {
+        lmsViewList = [];
+        podiumWrap.classList.add('hidden');
+        document.getElementById('stat-total-groups').innerText = "0";
+        document.getElementById('stat-avg-score').innerText = "0";
+        document.getElementById('stat-fastest-group').innerText = "-";
+        document.getElementById('stat-top-group').innerText = "-";
+        tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-slate-400 font-medium"><div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-indigo-50 text-indigo-300 flex items-center justify-center text-4xl"><i class="fa-solid fa-folder-open"></i></div><p class="font-black text-slate-500">Belum ada data</p><p class="text-xs mt-1">Hasil turnamen siswa akan muncul di sini secara otomatis.</p></td></tr>`;
+        return;
+      }
+
+      lmsData = lmsData.slice().sort((a, b) => b.totalScore - a.totalScore || a.totalTimeSec - b.totalTimeSec);
+      lmsViewList = lmsData;
+
+      const totalGroups = lmsData.length;
+      const avgScore = Math.round(lmsData.reduce((acc, g) => acc + g.totalScore, 0) / totalGroups);
+      const fastest = [...lmsData].sort((a, b) => a.totalTimeSec - b.totalTimeSec)[0];
+      const maxScore = Math.max(1, ...lmsData.map(g => g.totalScore));
+
+      document.getElementById('stat-total-groups').innerText = totalGroups;
+      document.getElementById('stat-avg-score').innerText = avgScore;
+      document.getElementById('stat-top-group').innerText = lmsData[0].groupName;
+      document.getElementById('stat-fastest-group').innerText = `${fastest.groupName} (${formatTime(fastest.totalTimeSec)})`;
+
+      // Podium (urutan tampilan: juara 2, 1, 3)
+      const medal = [
+        { grad: 'from-amber-300 to-yellow-500', block: 'h-32 sm:h-36', label: '1', icon: 'fa-crown' },
+        { grad: 'from-slate-300 to-slate-400', block: 'h-24 sm:h-28', label: '2', icon: 'fa-medal' },
+        { grad: 'from-orange-300 to-amber-600', block: 'h-20 sm:h-24', label: '3', icon: 'fa-medal' }
+      ];
+      [1, 0, 2].filter(i => lmsData[i]).forEach(i => {
+        const g = lmsData[i], m = medal[i], av = avatarFor(g.groupName);
+        podium.innerHTML += `
+          <div class="flex flex-col items-center w-1/3 max-w-[180px] fade-in">
+            <i class="fa-solid ${m.icon} ${i === 0 ? 'text-amber-500 text-2xl' : 'text-slate-400 text-lg'} mb-1"></i>
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${av.grad} text-white font-black flex items-center justify-center shadow-lg">${av.ini}</div>
+            <div class="mt-2 text-xs sm:text-sm font-black text-indigo-950 text-center truncate w-full" title="${esc(g.groupName)}">${esc(g.groupName)}</div>
+            <div class="text-[10px] text-slate-500 font-bold">${esc(g.className || '-')}</div>
+            <div class="w-full ${m.block} mt-2 rounded-t-2xl bg-gradient-to-b ${m.grad} text-white flex flex-col items-center justify-center shadow-md">
+              <span class="text-3xl sm:text-4xl font-black drop-shadow">${m.label}</span>
+              <span class="text-xs font-black opacity-90">${g.totalScore} Pts</span>
+            </div>
+          </div>`;
+      });
+      podiumWrap.classList.remove('hidden');
+
+      // Tabel
+      const rankStyle = [
+        'bg-gradient-to-br from-amber-300 to-yellow-500 text-white shadow-md shadow-amber-400/40',
+        'bg-gradient-to-br from-slate-300 to-slate-400 text-white shadow-md',
+        'bg-gradient-to-br from-orange-300 to-amber-600 text-white shadow-md'
+      ];
+      lmsData.forEach((group, idx) => {
+        const av = avatarFor(group.groupName);
+        const rk = rankStyle[idx] || 'bg-slate-100 text-slate-500';
+        const pct = Math.max(4, Math.round((group.totalScore / maxScore) * 100));
+        tbody.innerHTML += `
+          <tr class="hover:bg-indigo-50/50 transition-colors group ${idx === 0 ? 'bg-amber-50/40' : ''}">
+            <td class="p-4">
+              <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl ${rk} font-black flex items-center justify-center text-sm">${idx === 0 ? '<i class="fa-solid fa-crown text-xs"></i>' : idx + 1}</span>
+              </div>
+            </td>
+            <td class="p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${av.grad} text-white font-black text-sm flex items-center justify-center shadow">${av.ini}</div>
+                <div class="min-w-0">
+                  <div class="font-black text-indigo-950 truncate max-w-[200px]">${esc(group.groupName)}</div>
+                  <div class="mt-1">${babChip(group.topicTitle)}</div>
+                </div>
+              </div>
+            </td>
+            <td class="p-4"><span class="inline-block bg-slate-100 text-slate-700 font-black text-xs px-2.5 py-1 rounded-lg">${esc(group.className || '-')}</span></td>
+            <td class="p-4">
+              <div class="flex items-baseline gap-1"><span class="font-black text-emerald-600 text-xl">${esc(group.totalScore)}</span><span class="text-[10px] text-slate-400 font-black uppercase">Pts</span></div>
+              <div class="h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500" style="width:${pct}%"></div></div>
+            </td>
+            <td class="p-4"><span class="inline-flex items-center gap-1.5 text-amber-700 bg-amber-50 font-black text-xs px-2.5 py-1 rounded-lg"><i class="fa-regular fa-clock"></i>${esc(formatTime(group.totalTimeSec))}</span></td>
+            <td class="p-4 text-center">
+              <button onclick="inspectByIdx(${idx})" class="px-4 py-2 bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white font-bold rounded-xl text-xs transition-colors shadow-sm">Rincian <i class="fa-solid fa-arrow-right ml-1 opacity-50"></i></button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function inspectByIdx(i) {
+      const group = lmsViewList[i];
+      if (group) inspectGroup(group);
+    }
+
+    function inspectGroup(group) {
+      document.getElementById('inspector-group-title').innerText = `${group.groupName} (${group.className || '-'}) - ${group.topicTitle} (Skor: ${group.totalScore})`;
+      const cont = document.getElementById('inspector-breakdown-container');
+      cont.innerHTML = "";
+
+      (group.answers || []).forEach(ans => {
+        cont.innerHTML += `
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-xs space-y-3 border-l-4 ${ans.isCorrect ? 'border-l-emerald-500' : 'border-l-red-400'}">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+              <span class="font-black text-indigo-900 text-sm"><i class="fa-solid fa-user-astronaut text-indigo-400 mr-1.5"></i>${esc(ans.role)}</span>
+              <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700">${esc(ans.qualityTitle)} · ${esc(ans.score)} Pts</span>
+            </div>
+            <p class="text-slate-600 font-medium italic">Q: "${esc(ans.question)}"</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100"><strong>Pilihan:</strong> <span class="font-black ${ans.isCorrect ? 'text-emerald-600' : 'text-red-600'}">"${esc(ans.sticky)}"</span> ${ans.isCorrect ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : '<i class="fa-solid fa-circle-xmark text-red-500"></i>'}</div>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100"><strong>Waktu:</strong> ${esc(formatTime(ans.timeSpentSec))}</div>
+            </div>
+            <div class="bg-indigo-50/60 p-3 rounded-lg border border-indigo-100 text-slate-800"><strong class="text-indigo-700">Alasan siswa:</strong> "${esc(ans.reason)}"</div>
+            <div class="bg-emerald-50/60 p-3 rounded-lg border border-emerald-100 text-emerald-900"><strong>Refleksi:</strong> ${esc(ans.explanation)}</div>
+          </div>
+        `;
+      });
+      document.getElementById('lms-inspector-card').classList.remove('hidden');
+      document.getElementById('lms-inspector-card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeInspector() { document.getElementById('lms-inspector-card').classList.add('hidden'); }
+    
+    function clearTournamentData() {
+      if (confirm("Hapus seluruh data riwayat pengerjaan siswa di LMS? (berlaku untuk SEMUA perangkat)")) {
+        deleteAllLMSRecords().then(() => {
+          renderLMSDashboard(); closeInspector();
+          showToast("Data klasemen dikosongkan.");
+        }).catch(e => { console.error(e); showToast("Gagal menghapus data di server!"); });
+      }
+    }
+    
+    function exportToCSV() {
+      const allLmsData = loadLMSRecords();
+      const filterValTopic = document.getElementById('lms-filter-topic').value;
+      const filterValClass = document.getElementById('lms-filter-class').value;
+      
+      let lmsData = allLmsData;
+      if(filterValTopic !== "ALL") lmsData = lmsData.filter(g => g.topicTitle === filterValTopic);
+      if(filterValClass !== "ALL") lmsData = lmsData.filter(g => g.className === filterValClass);
+
+      if (!lmsData.length) return alert("Belum ada data untuk di-export pada pilihan ini!");
+      
+      let csv = "Topik Materi,Kelas,Nama Kelompok,Total Skor,Total Waktu Detik,Petualang,Pertanyaan,Pilihan Sticky Note,Kebenaran,Kualitas Alasan,Skor,Waktu Detik,Alasan Siswa,Refleksi/Kunci\n";
+      lmsData.forEach(g => {
+        g.answers.forEach(a => {
+          csv += `"${g.topicTitle}","${g.className || '-'}","${g.groupName}",${g.totalScore},${g.totalTimeSec},"${a.role}","${a.question.replace(/"/g,'""')}","${a.sticky.replace(/"/g,'""')}",${a.isCorrect?"BENAR":"SALAH"},"${a.qualityTitle}",${a.score},${a.timeSpentSec},"${a.reason.replace(/"/g,'""')}","${a.explanation.replace(/"/g,'""')}"\n`;
+        });
+      });
+      
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv));
+      link.setAttribute("download", `Rekap_LMS_StickyNote_${filterValTopic === "ALL" ? "SemuaMateri" : filterValTopic}_${filterValClass === "ALL" ? "SemuaKelas" : filterValClass}_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      showToast("CSV Berhasil Diunduh");
+    }
+
+    // ===================================
+    // MANAJEMEN BANK SOAL (EDITOR STICKY NOTE)
+    // ===================================
+    function renderEditorView() {
+      const topicId = document.getElementById('editor-select-topic').value;
+      const qData = getQuestionsData()[topicId];
+      const container = document.getElementById('editor-forms-container');
+      
+      container.innerHTML = "";
+      
+      qData.forEach((q, idx) => {
+        let optionsHtml = '';
+        q.options.forEach((opt, optIdx) => {
+          optionsHtml += `
+            <div class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+              <div class="flex flex-col items-center justify-center pl-2">
+                <input type="checkbox" id="edit-q${idx}-opt${optIdx}-c" ${opt.isCorrect ? 'checked' : ''} class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
+                <span class="text-[9px] font-bold text-slate-400 mt-1 uppercase">Benar?</span>
+              </div>
+              <input type="text" id="edit-q${idx}-opt${optIdx}-t" value="${opt.text.replace(/"/g, '&quot;')}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Teks Sticky Note ${optIdx+1}">
+            </div>
+          `;
+        });
+
+        container.innerHTML += `
+          <div class="p-5 sm:p-6 rounded-2xl border-2 border-slate-100 bg-slate-50 relative shadow-sm">
+             <div class="absolute top-0 left-0 bg-indigo-600 text-white text-xs font-black px-4 py-1.5 rounded-br-xl rounded-tl-xl uppercase tracking-widest shadow-sm">${q.role}</div>
+             <div class="mt-6 space-y-5">
+                <div>
+                  <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wide">Pernyataan / Soal:</label>
+                  <textarea id="edit-q${idx}-text" rows="2" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none shadow-inner">${q.question}</textarea>
+                </div>
+                
+                <div>
+                  <label class="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">6 Pilihan Sticky Note <span class="text-[10px] text-slate-400 normal-case">(Centang opsi yang bernilai benar)</span>:</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${optionsHtml}</div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wide">Penjelasan / Refleksi Jawaban:</label>
+                  <textarea id="edit-q${idx}-exp" rows="2" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm font-medium text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none shadow-inner bg-emerald-50">${q.explanation}</textarea>
+                </div>
+             </div>
+          </div>
+        `;
+      });
+    }
+
+    function saveEditedQuestions() {
+      const topicId = document.getElementById('editor-select-topic').value;
+      let allData = getQuestionsData();
+      let qData = allData[topicId];
+      
+      let isError = false;
+      qData.forEach((q, idx) => {
+        const textVal = document.getElementById(`edit-q${idx}-text`).value.trim();
+        const expVal = document.getElementById(`edit-q${idx}-exp`).value.trim();
+        if(!textVal || !expVal) isError = true;
+        
+        q.question = textVal;
+        q.explanation = expVal;
+        
+        let checkedCount = 0;
+        q.options.forEach((opt, optIdx) => {
+           const optText = document.getElementById(`edit-q${idx}-opt${optIdx}-t`).value.trim();
+           const optCheck = document.getElementById(`edit-q${idx}-opt${optIdx}-c`).checked;
+           if(!optText) isError = true;
+           if(optCheck) checkedCount++;
+           
+           opt.text = optText;
+           opt.isCorrect = optCheck;
+        });
+        
+        if (checkedCount === 0) {
+           alert(`Soal ${q.role} harus memiliki setidaknya 1 jawaban yang dicentang benar!`);
+           isError = true;
+        }
+      });
+      
+      if(isError) return alert("Mohon lengkapi semua bidang teks dan pastikan ada opsi yang dicentang benar!");
+      
+      allData[topicId] = qData;
+      saveAllQuestionsData(allData).then(ok => { if (ok) showToast("Materi Berhasil Diperbarui!"); });
+    }
+
+    function resetEditorToDefault() {
+      if(confirm("Kembalikan seluruh pertanyaan pada materi ini ke pengaturan awal? Perubahan Anda akan hilang.")) {
+        const topicId = document.getElementById('editor-select-topic').value;
+        let allData = getQuestionsData();
+        allData[topicId] = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS_DATA))[topicId];
+        saveAllQuestionsData(allData);
+        renderEditorView();
+        showToast("Materi dikembalikan ke bawaan pabrik.");
+      }
+    }
+
+    // ===================================
+    // MUSIK LATAR & EFEK SUARA (dibuat langsung oleh browser, tanpa file lagu)
+    // ===================================
+    const Sound = (() => {
+      let ctx = null, master = null, timer = null, nextTime = 0, step = 0, noiseBuf = null;
+      let started = false, muted = false;
+      try { muted = localStorage.getItem('asni_sound_off') === '1'; } catch (e) {}
+      const BPM = 126, STEP = 60 / BPM / 4;            // 1 langkah = not 1/16
+      const ROOTS = [36, 31, 33, 29];                   // bass: C  G  Am  F
+      const TRIADS = [[60,64,67],[59,62,67],[57,60,64],[57,60,65]];
+      const HOOK = [0,null,2,null,1,null,2,3, 0,null,2,null,3,2,1,null]; // pola melodi per birama
+      const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+      function ensure() {
+        if (ctx) return true;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        ctx = new AC();
+        const comp = ctx.createDynamicsCompressor();
+        master = ctx.createGain(); master.gain.value = muted ? 0 : 0.5;
+        master.connect(comp); comp.connect(ctx.destination);
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        return true;
+      }
+
+      function tone(type, freq, t, dur, vol, opts = {}) {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        if (opts.slideTo) o.frequency.exponentialRampToValueAtTime(opts.slideTo, t + dur);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + (opts.attack || 0.008));
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        let node = o;
+        if (opts.lp) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = opts.lp; o.connect(f); node = f; }
+        node.connect(g); g.connect(master);
+        o.start(t); o.stop(t + dur + 0.05);
+      }
+      function noise(t, dur, vol, type, freq) {
+        const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+        const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(f); f.connect(g); g.connect(master);
+        src.start(t); src.stop(t + dur + 0.02);
+      }
+
+      function playStep(n, t) {
+        const s16 = n % 16, bar = Math.floor(n / 16) % 4;
+        // drum
+        if (s16 % 4 === 0) tone('sine', 160, t, 0.18, 0.95, { slideTo: 45, attack: 0.002 }); // kick
+        if (s16 === 4 || s16 === 12) noise(t, 0.14, 0.45, 'bandpass', 1700);                  // tepuk
+        if (s16 % 4 === 2) noise(t, 0.05, 0.22, 'highpass', 7500);                            // hi-hat
+        else if (s16 % 2 === 1) noise(t, 0.025, 0.07, 'highpass', 8500);
+        // bass berirama
+        if (s16 % 2 === 0) tone('sawtooth', hz(ROOTS[bar] + (s16 % 4 === 2 ? 12 : 0)), t, STEP * 1.7, 0.30, { lp: 650 });
+        // pad akor di awal birama
+        if (s16 === 0) TRIADS[bar].forEach(m => tone('triangle', hz(m), t, STEP * 15, 0.045, { attack: 0.05 }));
+        // melodi ceria
+        const h = HOOK[s16];
+        if (h !== null) {
+          const tr = TRIADS[bar], note = (h === 3 ? tr[0] + 12 : tr[h]) + 12;
+          tone('square', hz(note), t, STEP * 1.6, 0.07, { lp: 3200 });
+        }
+      }
+
+      function schedule() {
+        while (nextTime < ctx.currentTime + 0.15) { playStep(step, nextTime); nextTime += STEP; step++; }
+      }
+      function updateUI() {
+        const on = started && !muted;
+        const icon = document.getElementById('sound-icon'), btn = document.getElementById('sound-btn');
+        if (icon) icon.className = 'fa-solid ' + (on ? 'fa-volume-high' : 'fa-volume-xmark');
+        if (btn) btn.classList.toggle('on', on);
+      }
+      function start() {
+        if (!ensure()) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        if (!started) { started = true; nextTime = ctx.currentTime + 0.1; step = 0; timer = setInterval(schedule, 25); }
+        master.gain.setTargetAtTime(muted ? 0 : 0.5, ctx.currentTime, 0.05);
+        updateUI();
+      }
+      function toggle() {
+        if (!started) { muted = false; } else { muted = !muted; }
+        try { localStorage.setItem('asni_sound_off', muted ? '1' : '0'); } catch (e) {}
+        if (!started) start(); else { master.gain.setTargetAtTime(muted ? 0 : 0.5, ctx.currentTime, 0.05); updateUI(); }
+        if (typeof showToast === 'function') showToast(muted ? 'Musik dimatikan' : 'Musik dinyalakan');
+      }
+      function sfx(name) {
+        if (!ctx || muted) return;
+        const t = ctx.currentTime + 0.01;
+        if (name === 'pop') { tone('square', 660, t, 0.09, 0.12, { slideTo: 990, lp: 4000 }); }
+        else if (name === 'start') { [523, 659, 784, 1046].forEach((f, i) => tone('square', f, t + i * 0.08, 0.14, 0.12, { lp: 4000 })); }
+        else if (name === 'fanfare') {
+          [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone('square', f, t + i * 0.11, 0.2, 0.13, { lp: 4500 }));
+          [523, 659, 784, 1046].forEach(f => tone('triangle', f, t + 0.8, 0.9, 0.12, { attack: 0.02 }));
+        }
+      }
+      // Browser hanya mengizinkan suara setelah pengguna menyentuh layar
+      function firstGesture(e) {
+        if (e && e.target && e.target.closest && e.target.closest('#sound-btn')) return;
+        ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.removeEventListener(ev, firstGesture, true));
+        if (!muted) start();
+      }
+      ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, firstGesture, true));
+      document.addEventListener('visibilitychange', () => {
+        if (!ctx) return;
+        if (document.hidden) ctx.suspend(); else if (started && !muted) ctx.resume();
+      });
+      return { start, toggle, sfx, updateUI, _ctx: () => ctx, _master: () => master };
+    })();
+
+    initCloud();
+  </script>
+  <div id="sync-badge" class="fixed bottom-3 left-3 z-40"></div>
+</body>
+</html>
